@@ -70,6 +70,9 @@ my $galleryTitle = "";
 my $galleryDescription = "";
 my $galleryUrl = "";
 my $update = 0;
+my $copy_method = 'copy';
+my @copy_method_ok = qw(copy hard sym ref);
+
 
 # support functions
 sub fatal
@@ -335,6 +338,16 @@ sub parse_cap
   return @capmethods;
 }
 
+sub parse_copy_method
+{
+  my $opt = shift;
+  my $value = shift || 'hard'; # default to hard link
+  if (!isin($value, @copy_method_ok)) {
+    fatal("invalid image copy method: $value");
+  }
+  return $value;
+}
+
 sub print_version
 {
   print("fgallery $VERSION\n");
@@ -364,6 +377,7 @@ sub print_help
   --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --no-sRGB		do not remap preview/thumbnail color profiles to sRGB
   --quality Q		preview image quality (0-100, currently: $imgq)
+  --link-orig		change images copy method (hard,sym,ref or copy)
   --index url		specify the URL location for the index/back button
   --title "Foo"		the title to use for Facebook and Twitter previews
   --description "bar"	the description to use for Facebook and Twitter previews
@@ -403,7 +417,9 @@ my ($ret, @ARGS) = GetOptions(
   'index=s' => sub { $indexUrl = $_[1]; },
   'title=s' => sub { $galleryTitle = $_[1]; },
   'description=s' => sub { $galleryDescription = $_[1]; },
-  'url=s' => sub { $galleryUrl = $_[1]; });
+  'url=s' => sub { $galleryUrl = $_[1]; },
+  'link-orig:s' => sub { $copy_method = parse_copy_method($_[0], $_[1]); },
+);
 
 if(@ARGV < 2 || @ARGV > 3 || !$ret) {
   print_help(2);
@@ -678,6 +694,39 @@ foreach my $props(@aprops)
 }
 $amp /= @files;
 
+sub copy_source_file
+{
+  my $file = shift;
+  my $fout = shift;
+
+  my @options;
+  push @options, '-L';
+
+  my %option = (
+    hard => '--link',
+    sym  => '--symbolic-link',
+    ref  => '--reflink',
+  );
+  if (defined($option{$copy_method}))
+  {
+    push @options, $option{$copy_method};
+  }
+
+  # symlinks need the right dest path - simplest is to give them an abs path
+  if ($copy_method eq 'sym')
+  {
+    $file = rel2abs($file);
+  }
+
+  sys('cp', @options, $file, $fout);
+
+  # these copy methods end up with a new inode
+  if ($copy_method eq 'copy' || $copy_method eq 'ref')
+  {
+    chmod(0600, $fout);
+  }
+}
+
 # 2nd pass: produce output files
 sub process_img
 {
@@ -698,8 +747,7 @@ sub process_img
   progress::status($fbase);
 
   # copy source file
-  sys('cp', '-L', $file, $fout);
-  chmod(0600, $fout);
+  copy_source_file($file,$fout);
 
   # apply lossless transforms
   if(!$keeporig)
