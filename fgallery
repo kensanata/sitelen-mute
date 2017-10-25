@@ -33,7 +33,7 @@ use Time::Piece;
 my $JSON_cls = eval { require Cpanel::JSON::XS; "Cpanel::JSON::XS"; } //
 	       eval { require JSON::PP; "JSON::PP"; } //
 	       fatal("either Cpanel::JSON::XS or JSON::PP is required");
-$JSON_cls->import(qw{encode_json});
+$JSON_cls->import(qw{encode_json decode_json});
 
 # constants
 our $VERSION = "1.8.2";
@@ -69,6 +69,7 @@ my @capmethods = ("txt", "xmp", "exif");
 my $galleryTitle = "";
 my $galleryDescription = "";
 my $galleryUrl = "";
+my $update = 0;
 
 # support functions
 sub fatal
@@ -241,7 +242,7 @@ sub encode
     my ($msg) = @_;
     lock($cnt);
 
-    my $pc = ($cnt++ / $total * 100);
+    my $pc = ($cnt++ * 100 / $total);
     my $str = sprintf("%s %2.0f%%", $act, $pc);
     if(defined($msg)) {
       $str .= ": " . $msg;
@@ -353,6 +354,7 @@ sub print_help
   -k			do not modify files, keep original
   -t			do not time-sort
   -r			reverse album order
+  -u			update existing gallery
   -p			do not automatically include full-sized panoramas
   -d			do not generate a full album download
   -f			improve thumbnail cutting by performing face detection
@@ -391,6 +393,7 @@ my ($ret, @ARGS) = GetOptions(
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
   't' => sub { $timesort = 0; },
+  'u' => sub { $update = 1; },
   'v' => sub { $verbose = 1; },
   'max-full=s' => sub { @maxfull = parse_wh(@_); },
   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
@@ -503,10 +506,12 @@ my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
 
 # cleanup target paths
-for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
-{
-  remove_tree($path);
-  make_path($path);
+unless ($update) {
+  for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
+  {
+    remove_tree($path);
+    make_path($path);
+  }
 }
 
 # disable sub-process parallelism when threading ourselves
@@ -514,6 +519,22 @@ if($workers)
 {
   $ENV{MAGICK_THREAD_LIMIT} = 1;
   $ENV{OMP_NUM_THREADS} = 1;
+}
+
+# updates require data from the JSON file
+my @odata;
+my %ofiles;
+if ($update) {
+  # FIXME: use slurp but avoid wide character warning?
+  my $fn = "$out/data.json";
+  open(my $fd, '<:raw', $fn) or fatal("cannot read $fn: $!");
+  local $/;
+  my $json = <$fd>;
+  my $data = decode_json($json);
+  @odata = @{$data->{data}};
+  foreach(@odata) {
+    $ofiles{$_->{img}->[0]} = 1; # this is $fdata{img}
+  }
 }
 
 # 1st pass: extract/prepare input file data
@@ -535,6 +556,14 @@ sub analyze_file
   $sane =~ s/[^\w\-]/_/gu;
 
   my $root = $sane;
+
+  # FIXME: need a way to identify existing files with the
+  # autoincrement below. For the moment, this breaks for all filenames
+  # that result in duplicates after sanitzing.
+  if ($update && exists $ofiles{"imgs/$root.$ext"}) {
+    return undef;
+  }
+
   for(my $c = 0;; ++$c)
   {
     my $tmp = "$out/imgs/$root.$ext";
@@ -616,6 +645,10 @@ for(my $n = 0; $n <= $#files;)
   }
   splice(@files, $n, 1);
   splice(@aprops, $n, 1);
+}
+
+unless(@files) {
+  fatal("nothing to be done");
 }
 
 # gather some statistics
@@ -882,6 +915,10 @@ foreach my $fdata(@adata)
     }
   }
   push(@{$json{data}}, \%data);
+}
+
+if ($update) {
+  $json{data} = [sort { $a->{stamp} <=> $b->{stamp} } @{$json{data}}, @odata];
 }
 
 my $fd;
