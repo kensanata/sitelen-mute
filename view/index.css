@@ -343,3 +343,28 @@ img
 {
   background: url(cut-mov.png) top left repeat-y, url(cut-mov.png) top right repeat-y;
 }
+
+/* noscript environment, based on https://css-tricks.com/seamless-responsive-photo-grid/ */
+#photos {
+  /* Prevent vertical gaps */
+  line-height: 0;
+  /* max number of columns */
+  -webkit-column-count: 11;
+  -webkit-column-gap:   0px;
+  -moz-column-count:    11;
+  -moz-column-gap:      0px;
+  column-count:         11;
+  column-gap:           0px;  
+}
+
+#photos p, #photos h1 {
+  line-height: 1em;
+  font-size: 1em;
+  padding-left: 1ex;
+}
+
+#photos img {
+  /* Just in case there are inline attributes */
+  width: 100% !important;
+  height: auto !important;
+}
