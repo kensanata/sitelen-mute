@@ -537,7 +537,7 @@ if($workers)
   $ENV{OMP_NUM_THREADS} = 1;
 }
 
-# updates require data from the JSON file
+# updates require data from the original JSON file
 my @odata;
 my %ofiles;
 if ($update) {
@@ -573,10 +573,11 @@ sub analyze_file
 
   my $root = $sane;
 
-  # FIXME: Need a way to identify existing files with the autoincrement below.
-  # For the moment, this breaks for all filenames that result in duplicates
-  # after sanitzing.
-  if ($update && exists $ofiles{"imgs/$root.$ext"} && -f "$out/imgs/$root.$ext") {
+  # Skip this file if we're updating and it already exists in the output
+  # data.json. FIXME: Need a way to identify existing files with the
+  # autoincrement below. For the moment, this breaks for all filenames that
+  # result in duplicates after sanitzing.
+  if ($update && exists $ofiles{"imgs/$root.$ext"}) {
     return undef;
   }
 
