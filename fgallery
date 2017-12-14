@@ -1002,7 +1002,7 @@ my $index = slurp("$out/index.html");
 $index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
-  my $galleryImage = $adata[0]->{root} . ".$ext";
+  my $galleryImage = $adata[0]->{props}->{root} . ".$ext";
   $html = qq{    <!-- for Facebook -->
     <meta property="og:title" content="$galleryTitle" />
     <meta property="og:description" content="$galleryDescription" />
