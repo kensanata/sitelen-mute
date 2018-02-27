@@ -95,10 +95,33 @@ Install with::
 
 **Docker**
 
-You can also try the latest `fgallery` bundled with facedetect_ in a Docker
-container using the following ``Dockerfile`` provided by Stavros Korokithakis:
+You can also try the latest ```fgallery``` bundled with [facedetect](https://github.com/wavexx/facedetect) in a Docker
+container using the following [Dockerfile](Dockerfile).
 
-- https://github.com/skorokithakis/docker-fgallery
+Build docker file:
+
+     $ docker build -t fgallery .
+
+Run the docker image build previously:
+
+To use this image, just do:
+
+    # Set the initial environment variables
+    $ SOURCE_DIRECTORY="$HOME/mypictures/album1"
+    $ DESTINATION_DIRECTORY="/var/tmp/my_web_fgallery_photo_album"
+
+    # Check the SOURCE_DIRECTORY with pictures
+    $ ls -ld $SOURCE_DIRECTORY/*jpg
+    -rw-r--r-- 1 user user 690978 Feb  4  2003 /home/user/mypictures/album1/20030204-222803.jpg
+    -rw-r--r-- 1 user user 733873 Feb  4  2003 /home/user/mypictures/album1/20030204-222819.jpg
+
+    # Generate gallery with face detection enabled
+    $ docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro -v "`dirname $DESTINATION_DIRECTORY`":/destination fgallery /mnt /destination/`basename $DESTINATION_DIRECTORY`-1 -f -j $(nproc)
+
+    # Generate gallery with face detection enabled, slim output (no original files and downloads), maximum full image size (1920x1080) and do not generate a full album download
+    $ docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro -v "`dirname $DESTINATION_DIRECTORY`":/destination fgallery /mnt /destination/`basename $DESTINATION_DIRECTORY`-2 -s -d -f -j $(nproc) --max-full 1920x1080
+
+(Thanks to: https://github.com/skorokithakis/docker-fgallery and https://github.com/pank/docker-fgallery)
 
 
 Usage notes
