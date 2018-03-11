@@ -105,14 +105,14 @@ ls -ld $SOURCE_DIRECTORY/*jpg
 
 # Generate gallery with face detection enabled
 docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
-	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/fgallery \
+	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
 	/mnt /destination/`basename $DESTINATION_DIRECTORY`-1 -f -j $(nproc)
 
 # Generate gallery with face detection enabled, slim output (no original files
 # and downloads), maximum full image size (1920x1080) and do not generate a
 # full album download
 docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
-	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/fgallery \
+	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
 	/mnt /destination/`basename $DESTINATION_DIRECTORY`-2 -s -d -f -j $(nproc) \
 	--max-full 1920x1080
 ```
