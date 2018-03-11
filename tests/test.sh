@@ -21,4 +21,4 @@ mkdir "$IMAGES_DESTINATION"
 
 wget -c $IMAGES -P "$IMAGES_DESTINATION"
 
-docker run --rm -it -u $(id -u):$(id -g) -v "$IMAGES_DESTINATION":/mnt:ro -v "`dirname $FGALLERY_DESTINATION`":/destination kensanata/fgallery /mnt /destination/`basename $FGALLERY_DESTINATION` -s -d -f -j $(nproc) --max-full 1920x1080
+docker run --rm -it -u $(id -u):$(id -g) -v "$IMAGES_DESTINATION":/mnt:ro -v "`dirname $FGALLERY_DESTINATION`":/destination kensanata/sitelen-mute /mnt /destination/`basename $FGALLERY_DESTINATION` -s -d -f -j $(nproc) --max-full 1920x1080
