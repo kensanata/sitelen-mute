@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 # fgallery: a modern, minimalist javascript photo gallery
 # Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
@@ -6,11 +6,13 @@
 use v5.14;
 use strict;
 use warnings;
+use FindBin qw($Bin);
 
 our $VERSION = "2.0.0";
 
 # where the view subdirectory lives (JavaScript and CSS code)
 our $shareDir = '/usr/local/share/fgallery';
+$shareDir = $Bin unless -d $shareDir;
 
 use locale;
 use utf8;
