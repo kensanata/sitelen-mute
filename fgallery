@@ -749,9 +749,11 @@ sub process_img
   my @center = (0.5, 0.5);
   if ($facedet) {
     my @f = sys("facedetect", "--best", "--center", catfile($absOut, $fimg));
-    if (@f) {
-      my @tmp = split(" ", $f[0]);
-      @center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
+    for (@f) {
+      if (my @tmp = /(\d+) (\d+) (\d+) (\d+)/) {
+	@center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
+	last;
+      }
     }
   }
 
