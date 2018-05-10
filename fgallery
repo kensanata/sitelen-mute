@@ -312,55 +312,6 @@ sub parse_copy_method
   return $v;
 }
 
-# create a new noscript.html, sets select
-sub init_noscript
-{
-  my ($d) = @_;
-  fatal "init_noscript: $d not a directory"
-    unless $d && -d $d;
-  my $fd;
-  my $f = catfile($d, 'noscript.html');
-  open($fd, ">:raw", $f) || fatal "init_noscript: cannot write file '$f': $!";
-  chmod($filemode, $f);
-  select $fd;
-  print join "\n",
-    '<!DOCTYPE html>',
-    '<html>',
-    '<head>',
-    '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />',
-    '  <meta name="viewport" '
-       . 'content="width=device-width,initial-scale=1,'
-       . 'minimum-scale=1,minimal-ui" />',
-    '  <link href="view/noscript.css" rel="stylesheet" type="text/css" />',
-    '</head>',
-    '<body>',
-    '  <section id="photos">',
-    '';
-}
-
-sub print_noscript
-# <a href="imgs/DSC00712.jpg"><img src="thumbs/DSC00712.jpg" alt="c1 c2"></a>
-{
-  my ($f, $t, $c) = @_;
-  return unless @_ == 3 && $f && $t;
-  $c = [] unless $c && ref $c eq 'ARRAY';
-  my $x = '';
-  for (@$c) {
-    $x .= ' ' if $c =~ /\S$/o;
-    $x .= $_ if defined $_ && /\S/o;
-  }
-  my $a = '';
-  $a = sprintf ' alt="%s"', $x if $x && $x =~ /\S/o;
-  printf '    <a href="%s"><img src="%s"%s></a>' . "\n", $f, $t, $a;
-}
-
-# finishes noscript.html, resets select to STDOUT
-sub finish_noscript
-{
-  print join "\n", '  </section>', '</body>', '</html>', '';
-  select STDOUT;
-}
-
 sub print_help
 {
   warn qq{Usage: $me [options] INPUT_DIR OUTPUT_DIR [ALBUM_NAME]
@@ -896,8 +847,7 @@ $json{index} = $indexUrl if ($indexUrl);
 $json{blur} = \@backsize if $do_blur;
 $json{thumb} = { min => \@minthumb, max => \@maxthumb };
 
-# prepare data.json and print out noscript.html file
-init_noscript($absOut);
+# prepare data.json
 for my $fdata (@$adata) {
   my %data;
   for ( qw(img thumb file blur center) ) {
@@ -907,9 +857,7 @@ for my $fdata (@$adata) {
     $data{$_} = $fdata->{props}{$_} if defined $fdata->{props}{$_};
   }
   push(@{$json{data}}, \%data);
-  print_noscript($data{img}->[0], $data{thumb}->[0], $data{caption});
 }
-finish_noscript();
 
 $json{data} = [sort { $a->{stamp} <=> $b->{stamp} } @{$json{data}}, @odata]
   if $updating;
@@ -922,30 +870,30 @@ print $fd
       JSON::PP->new->ascii->pretty->canonical->allow_blessed->encode(\%json);
 close $fd;
 
-if ($galleryTitle && $galleryDescription && $galleryUrl) {
-  my $id = -1;
-  my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
-  $html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
-  $html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
-  $html .= qq{\t<div id="wrapper">\n};
-  $html .= qq{\t  };
-  $html .= join("\n\t  ", map {
-    $id++;
-    my $props = $_->{props};
-    my $caption = $props->{caption} ? $props->{caption}[0] : "";
-    my $root = $props->{root};
-    my $fbase = "$root.$ext";
-    my $file = $props->{file};
-    # no alt text or title attribute with caption?
-    qq{<a id="$id" href="imgs/$fbase" title="$caption">}
-    . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
-  } @$adata);
-  $html .= qq{\n\t</div>\n};
-  $html .= qq{      </div>\n};
-  $html .= qq{    };
-  my $index = slurp(catfile($absOut, 'index.html'));
-  $index =~ s@<noscript>.*?</noscript>@<noscript>$html</noscript>@s;
+my $id = -1;
+my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
+$html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
+$html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
+$html .= qq{\t<div id="wrapper">\n};
+$html .= qq{\t  };
+# all the images for noscript
+$html .= join("\n\t  ", map {
+  $id++;
+  my $props = $_->{props};
+  my $root = $props->{root};
+  my $fbase = "$root.$ext";
+  my $file = $props->{file};
+  my $caption = $props->{caption} ? $props->{caption}[0] : $root;
+  qq{<a id="$id" href="imgs/$fbase" title="$caption">}
+  . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
+} @$adata);
+$html .= qq{\n\t</div>\n};
+$html .= qq{      </div>\n};
+$html .= qq{    };
+my $index = slurp(catfile($absOut, 'index.html'));
+$index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
 
+if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
   my $galleryImage = $adata->[0]->{props}->{root} . ".$ext";
   $html = qq{
@@ -963,12 +911,12 @@ if ($galleryTitle && $galleryDescription && $galleryUrl) {
   };
   $index =~ s@    <!-- for Facebook -->\n(    .*\n)*@@;
   $index =~ s@  </head>@$html  </head>@;
-
-  open($fd, ">:encoding($ENCODING)", catfile($absOut, 'index.html'))
-    || fatal "cannot write new index file: $!";
-  print $fd $index;
-  close $fd;
 }
+
+open($fd, ">:encoding($ENCODING)", catfile($absOut, 'index.html'))
+  || fatal "cannot write new index file: $!";
+print $fd $index;
+close $fd;
 
 print "$0 version $VERSION done for $absOut\n";
 
