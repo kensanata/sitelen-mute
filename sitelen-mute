@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# fgallery: a modern, minimalist javascript photo gallery
+# sitelen-mute: a modern, minimalist javascript photo gallery
 # Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
 
@@ -11,7 +11,7 @@ use FindBin qw($Bin);
 our $VERSION = "2.0.0";
 
 # where the view subdirectory lives (JavaScript and CSS code)
-our $shareDir = '/usr/local/share/fgallery';
+our $shareDir = '/usr/local/share/sitelen-mute';
 $shareDir = $Bin unless -d $shareDir;
 
 use locale;
@@ -112,7 +112,7 @@ sub sys
   return split(/\n+/o, $o);
 }
 
-sub is_fgallery_dir
+sub is_sitelen_mute_dir
 {
     my ($d) = @_;
     return unless -e catfile($d, 'view');
@@ -336,13 +336,13 @@ sub print_help
   --no-sRGB             do not remap preview/thumbnail color profiles to sRGB
   --quality Q           preview image quality (0-100, currently: $imgq)
   --link-orig           copy method (hard,sym,ref,copy); default: $copy_method_default
-  --sharedir            ../share/fgallery dir containing view subdir ($shareDir)
+  --sharedir            ../share/sitelen-mute dir containing view subdir ($shareDir)
   --index url           URL location for the index/back button
   These options are for Facebook or Twitter and must all be provided:
   --url URL             URL of gallery
   --title "TITLE"       title for Facebook and Twitter previews
   --description "DESC"  description for Facebook and Twitter previews
-  --version             output current fgallery version ($VERSION)
+  --version             output current sitelen-mute version ($VERSION)
 };
   exit $_[0];
 }
@@ -407,7 +407,7 @@ if (!-d $absDir) {
     sys('cp', '-L', '-R', catfile($shareDir,'view'), $absOut);
     sys('mv', catfile(catfile($absOut,'view'),'index.html'), $absOut);
   }
-} elsif (!is_fgallery_dir($absOut)) {
+} elsif (!is_sitelen_mute_dir($absOut)) {
   fatal "output dir '$absOut' exists, but doesn't look like a ${me} dir";
 }
 

@@ -12,7 +12,6 @@ RUN set -x \
          cmake \
          curl \
          exiftran \
-         fgallery \
          imagemagick \
          jpegoptim \
          libcpanel-json-xs-perl \
@@ -76,4 +75,4 @@ VOLUME /mnt
 
 WORKDIR /mnt
 
-ENTRYPOINT ["fgallery"]
+ENTRYPOINT ["sitelen-mute"]

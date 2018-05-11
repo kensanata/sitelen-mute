@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
 IMAGES_DESTINATION="/tmp/images"
-FGALLERY_DESTINATION="/tmp/fgallery"
+SITELEN_MUTE_DESTINATION="/tmp/sitelen-mute"
 IMAGES="
 https://static.pexels.com/photos/38554/girl-people-landscape-sun-38554.jpeg
 https://static.pexels.com/photos/541520/pexels-photo-541520.jpeg
@@ -12,8 +12,8 @@ https://static.pexels.com/photos/159787/man-white-shirt-male-person-159787.jpeg
 https://static.pexels.com/photos/41366/brunette-cute-fashion-female-41366.jpeg
 "
 
-if [ -d "$FGALLERY_DESTINATION" ] || [ -d "$IMAGES_DESTINATION" ] ; then
-  echo "The \"$FGALLERY_DESTINATION\" or \"$IMAGES_DESTINATION\" exists... Can not continue !"
+if [ -d "$SITELEN_MUTE_DESTINATION" ] || [ -d "$IMAGES_DESTINATION" ] ; then
+  echo "The \"$SITELEN_MUTE_DESTINATION\" or \"$IMAGES_DESTINATION\" exists... Cannot continue!"
   exit 1
 fi
 
@@ -21,4 +21,4 @@ mkdir "$IMAGES_DESTINATION"
 
 wget -c $IMAGES -P "$IMAGES_DESTINATION"
 
-docker run --rm -it -u $(id -u):$(id -g) -v "$IMAGES_DESTINATION":/mnt:ro -v "`dirname $FGALLERY_DESTINATION`":/destination kensanata/sitelen-mute /mnt /destination/`basename $FGALLERY_DESTINATION` -s -d -f -j $(nproc) --max-full 1920x1080
+docker run --rm -it -u $(id -u):$(id -g) -v "$IMAGES_DESTINATION":/mnt:ro -v "`dirname $SITELEN_MUTE_DESTINATION`":/destination kensanata/sitelen-mute /mnt /destination/`basename $SITELEN_MUTE_DESTINATION` -s -d -f -j $(nproc) --max-full 1920x1080

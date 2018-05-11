@@ -1,6 +1,6 @@
-# sitelen mute: a static, minimalist javascript photo gallery
+# Sitelen Mute: a static, minimalist javascript photo gallery
 
-*sitelen mute* is a static photo gallery generator with no frills that has a
+*Sitelen Mute* is a static photo gallery generator with no frills that has a
 stylish, minimalist look. It shows your photos, and nothing else.
 
 You can see example galleries at the following address:
@@ -33,7 +33,7 @@ right now.
 Generate all the static files with `./sitelen-mute`:
 
 ```
-./sitelen-pona photo-dir my-gallery
+./sitelen-mute photo-dir my-gallery
 ```
 
 Upload `my-gallery` somewhere.
@@ -54,7 +54,7 @@ This serves all the files from `http://localhost:8000`.
 
 ## Pre-built packages
 
-Pre-built packages for *sitelen mute* are not yet available anywhere.
+Pre-built packages for *Sitelen Mute* are not yet available anywhere.
 
 You can get pre-built packages for the predecessor `fgallery`, though.
 
@@ -96,7 +96,7 @@ pkg install fgallery
 ```
 # Set the initial environment variables
 SOURCE_DIRECTORY="$HOME/mypictures/album1"
-DESTINATION_DIRECTORY="/var/tmp/my_web_fgallery_photo_album"
+DESTINATION_DIRECTORY="/var/tmp/my_web_sitelen_mute_photo_album"
 
 # Check the SOURCE_DIRECTORY with pictures
 ls -ld $SOURCE_DIRECTORY/*jpg
@@ -192,7 +192,7 @@ enabled, there's generally no need to increase the thumbnail size.
 
 ## Image captioning
 
-Several sources for image captions are automatically read by fgallery.
+Several sources for image captions are automatically read by *Sitelen Mute*.
 These can be customized though the `-c` flag in the command line,
 which consists of a comma-separated list of any of the following:
 
@@ -281,7 +281,7 @@ method of enabling CM only on images with an ICC profile is clearly
 not adequate, since images without a profile should be assumed to be
 in sRGB color-space already.
 
-Because of the general lack of color management, *sitelen mute*
+Because of the general lack of color management, *Sitelen Mute*
 transforms the preview and thumbnail images from the built-in color
 profile to the sRGB color-space by default. On most devices this will
 result in images appearing to be *closer* to true colors with only
@@ -374,12 +374,12 @@ sudo ln -s /usr/local/share/sitelen-mute/sitelen-mute /usr/local/bin
 
 ## Authors and Copyright
 
-[sitelen-mute](https://github.com/kensanata/sitelen-mute) grew out of
+[Sitelen Mute](https://github.com/kensanata/sitelen-mute) grew out of
 [fgallery](https://github.com/wavexx/fgallery). *fgallery* was
-developed by Yuri D'Elia. *Sitelen mute* is being developed by Alex
+developed by Yuri D'Elia. *Sitelen Mute* is being developed by Alex
 Schroeder.
 
-## Extending fgallery
+## Extending Sitelen Mute
 
 *Sitelen Mute* is composed of a backend (the `sitelen-mute` script)
 and a viewer (contained in the `view` directory). Both are distributed
@@ -389,7 +389,7 @@ The backend just cares about generating the image previews and the
 album data. All the presentation logic however is inside the viewer.
 
 It's relatively easy to generate the album data dynamically and just
-use the viewer. This was my aim when Yuri D'Elia started to develop
+use the viewer. This was Yuri D'Elia's aim when they started to develop
 *fgallery*, as it's much easier to just modify an existing CMS instead
 of trying to reinvent the wheel. All a backend has to do is provide a
 valid "data.json" at some prefixed address.
