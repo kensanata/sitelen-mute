@@ -401,6 +401,4 @@ valid "data.json" at some prefixed address.
 - "Live" images as created by iPhones consisting of a JPEG cover image
   and a very short video
 
-- Allow to hide the thumbnails entirely ("maximize")
-
 - Improve EXIF header display
