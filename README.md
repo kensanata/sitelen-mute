@@ -6,9 +6,9 @@ detects faces so they aren't cropped in the thumbnails).
 
 You can see example galleries here:
 
-- https://www.thregr.org/~wavexx/software/fgallery/demo/
-- https://marabu.ch/efgallery/demo
-- https://alexschroeder.ch/gallery
+- https://www.thregr.org/~wavexx/software/fgallery/demo/ (fgallery version 1.x)
+- https://marabu.ch/efgallery/demo/ (efgallery)
+- https://alexschroeder.ch/gallery/ (sitelen-mute)
 
 There is no server-side processing, only static generation. The
 resulting gallery can be uploaded anywhere without any additional
