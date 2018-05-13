@@ -46,10 +46,11 @@ use Digest::SHA;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-# our name, directory path and directory creation mode
-my ($bindir, $me) = (splitpath($0))[1,2];
+# our name, directory path, and directory creation mode
+my $me = (splitpath($0))[2];
+use FindBin qw($Bin);
 # view subdirectory where the JavaScript and CSS lives
-my $viewdir = catfile($bindir, '..', 'share', $me, 'view');
+my $viewdir = catfile((splitpath($Bin))[1], 'share', $me, 'view');
 umask oct('0022');
 
 # defaults
