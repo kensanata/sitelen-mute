@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/pkg/bin/perl
 # A modern, minimalist javascript photo gallery
 # maintined by "Alex Schroeder" <alex@gnu.org>
 # at https://github.com/kensanata/sitelen-mute
@@ -12,7 +12,7 @@ use v5.14;
 use strict;
 use warnings;
 
-our $VERSION = "2.1";
+our $VERSION = "2.1nb1";
 
 use locale;
 use utf8;
@@ -32,7 +32,6 @@ use Thread::Queue;
 use Storable qw{freeze thaw};
 use Fcntl;
 
-use FindBin qw{$Bin};
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
@@ -47,10 +46,10 @@ use Digest::SHA;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-# our name ;-)
-my $me = (splitpath($0))[2];
-# view subdirectory where the JavaScript and CSS code lives
-my $viewdir = catfile($Bin, 'view');
+# our name, directory path and directory creation mode
+my ($bindir, $me) = (splitpath($0))[1,2];
+# view subdirectory where the JavaScript and CSS lives
+my $viewdir = catfile($bindir, '..', 'share', $me, 'view');
 umask oct('0022');
 
 # defaults
@@ -445,7 +444,7 @@ sub print_help
   --no-sRGB             do not remap preview/thumbnail color profiles to sRGB
   --quality Q           preview image quality (0-100, currently: $imgq)
   --link-orig           copy method (hard,sym,ref,copy); default: $copy_method
-  --viewdir             directory containing $me CSS/JavaScript ($viewdir)
+  --viewdir             CSS/JavaScript srcdir ($viewdir)
   --index url           URL location for the index/back button
   --version             output current $me version ($VERSION)
   Add meta tags for Facebook/Twitter (must be specified all or none):
@@ -491,6 +490,9 @@ my ($rc, @ARGS) = GetOptions(
 );
 
 print_help(2) unless $rc && ( (@ARGV == 2) || ((@ARGV == 1) && $updating) );
+
+fatal "no such directory $viewdir; try --viewdir option\n"
+  unless -d $viewdir;
 
 if (($galleryTitle || $galleryDescription || $galleryUrl)
     && !($galleryTitle && $galleryDescription && $galleryUrl)) {
