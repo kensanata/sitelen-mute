@@ -58,7 +58,7 @@ This serves all the files from `http://localhost:8000`.
 
 Pre-built packages for *efgallery* are not generally required as
 it's just a Perl script and some static CSS and JavaScript which
-can be installed maually.
+can be installed manually.
 
 That said, *efgallery* is a [pkgsrc](https://www.pkgsrc.org/)
 package, and as such can be downloaded from there.
