@@ -351,10 +351,7 @@ img
   background: url(cut-mov.png) top left repeat-y, url(cut-mov.png) top right repeat-y;
 }
 
-#photos {
-    padding: 10px;
-}
-
+/* noscript style */
 #wrapper {
     display: grid;
     grid-gap: 5px;
@@ -362,8 +359,12 @@ img
     line-height: 0;
 }
 
+#photos {
+    padding: 10px;
+}
+
 #photos img {
   width: 100%;
-  height: 100px;
+  height: auto
   object-fit: cover;
 }

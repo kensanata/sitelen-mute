@@ -1,18 +1,18 @@
 #!/usr/bin/env perl
-# sitelen-mute: a modern, minimalist javascript photo gallery
+# A modern, minimalist javascript photo gallery
+# maintined by "Alex Schroeder" <alex@gnu.org>
+# at https://github.com/kensanata/sitelen-mute
+# and "Adrian Steinmann" <ast@marabu.ch>
+# at https://github.com/0-ast-0/efgallery
+# forked from fgallery https://www.thregr.org/~wavexx/software/fgallery/
 # Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 # Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
 
 use v5.14;
 use strict;
 use warnings;
-use FindBin qw($Bin);
 
 our $VERSION = "2.0.0";
-
-# where the view subdirectory lives (JavaScript and CSS code)
-our $shareDir = '/usr/local/share/sitelen-mute';
-$shareDir = $Bin unless -d $shareDir;
 
 use locale;
 use utf8;
@@ -32,6 +32,7 @@ use Thread::Queue;
 use Storable qw{freeze thaw};
 use Fcntl;
 
+use FindBin qw{$Bin};
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
@@ -41,23 +42,27 @@ use Image::ExifTool qw{ImageInfo};
 use Time::Piece;
 
 use JSON::PP;
+use Digest::SHA;
 
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-# directory creation mask
+# our name ;-)
+my $me = (splitpath($0))[2];
+# view subdirectory where the JavaScript and CSS code lives
+my $viewdir = catfile($Bin, 'view');
 umask oct('0022');
 
 # defaults
-my (undef, undef, $me) = splitpath($0);
+my $facedetect_url = 'http://www.thregr.org/~wavexx/hacks/facedetect/';
 my $filemode = oct('0644');
 my $slim = 0;
-my $ofile = 0;
+my $include = 0;
 my $orient = 1;
 my $timesort = 1;
 my $revsort = 0;
-my %filetypes = map { $_ => 1 } qw(JPEG PNG TIFF);
-my %extensions = map { $_ => 1 } qw(jpg jpeg png tif tiff);
+my %filetypes = map { $_ => 1 } qw{JPEG PNG TIFF};
+my %extensions = map { $_ => 1 } qw{jpg jpeg png tif tiff};
 my $ext = "jpg";
 my @minthumb = (150, 112);
 my @maxthumb = (267, 200);
@@ -67,7 +72,7 @@ my $fullpano = 1;
 my $nodown = 0;
 my $panort = 2.;
 my $facedet = 0;
-my $keeporig = 0;
+my $use_orig = 0;
 my $jpegoptim = 1;
 my $pngoptim = 1;
 my $p7zip = 1;
@@ -76,15 +81,33 @@ my $workers = 0;
 my $sRGB = 1;
 my $do_blur = 1;
 my $indexUrl = undef;
-my %caption_method = map { $_ => 1} qw(txt xmp exif cmt);
-my @capmethods = keys %caption_method;
+my %captions = map { $_ => 1} qw{txt xmp exif cmt};
+my @captions = keys %captions;
 my $galleryTitle = '';
 my $galleryDescription = '';
 my $galleryUrl = '';
 my $updating = 0;
-my %copy_method = map { $_ => 1 } qw(copy hard sym ref);
-my $copy_method_default = 'copy';
-my $copy_method = $copy_method_default;
+my %copy_method = (
+  copy => '',
+  hard => '--link',
+  sym  => '--symbolic-link',
+);
+$copy_method{ref} = '--reflink' unless $^O =~ m{bsd$}oi;
+my $copy_method = 'sym';
+my $fdownload = catfile(qw{files album.zip});
+my $alg = 'sha256';
+my $sha = Digest::SHA->new($alg);
+my $odata = { data => [] };
+my $ofiles;
+my @deleted;
+my $dir;
+my $absDir;
+my $out;
+my $absOut;
+my $name;
+my $aprops;
+my $adata;
+my $zipfile;
 
 # support functions
 sub fatal
@@ -92,7 +115,7 @@ sub fatal
   die map { "$_\n" } 'Fatal error:', @_;
 }
 
-# see if our environment has a given command installed
+# check if our environment has a given command installed
 sub cmd_exists
 {
   my ($c) = @_;
@@ -109,10 +132,39 @@ sub sys
   local $/ = undef;
   my $o = <$fd>;
   close($fd) || fatal "close failed on $cmd: $!";
-  return split(/\n+/o, $o);
+  return split(m{\n+}o, $o);
 }
 
-sub is_sitelen_mute_dir
+sub do_copy
+# OS-specific handling of cp and ln commands
+{
+  die "USAGE: do_copy TYPE ARGS" unless @_ > 2;
+  my ($t, @args) = @_;
+  fatal "Unknown copy method '$t'" unless exists $copy_method{$t};
+  my @cmd = ('cp');
+  if ($^O =~ m{bsd$}oi) {
+    if ($t eq 'hard') {
+      @cmd = ('ln');
+    } elsif ($t eq 'sym') {
+      @cmd = ('ln', '-s');
+    } else {
+      fatal "do_copy: cp option '$t' not supported";
+    }
+  } else {
+    push @cmd, $copy_method{$t};
+  }
+  sys(@cmd, @args);
+};
+
+sub copy_source_file
+{
+  my ($file, $fout) = @_;
+  # symlinks need the right dest path so just give them an abs path
+  $file = rel2abs($file) if $copy_method eq 'sym';
+  do_copy($copy_method, $file, $fout);
+}
+
+sub is_a_gallery
 {
     my ($d) = @_;
     return unless -e catfile($d, 'view');
@@ -127,10 +179,52 @@ sub slurp
   no warnings; # avoid wide character warnings
   open(my $fd, '<', $fn) || fatal "cannot read $fn: $!";
   binmode($fd, ":encoding($ENCODING)") if $^V lt v5.23.4;
-  local $/;
+  local $/ = undef;
   my $o = <$fd>;
   close $fd;
   return $o // '';
+}
+
+sub read_json
+{
+  my($f) = @_;
+  my $j = slurp($f);
+  fatal "Failed to read $f" unless $j;
+  my $h = decode_json($j);
+  fatal "Failed to parse $f"
+    unless $h && ref $h eq 'HASH';
+  fatal "Failed to parse $f: missing data"
+    unless exists $h->{data};
+  fatal "Failed to parse $f: data not an array"
+    unless ref $h->{data} eq 'ARRAY';
+  return $h;
+}
+
+sub write_json
+{
+  my ($f, $jh, $ja) = @_;
+  die "USAGE: write_json FILENAME HREF AREF"
+    unless (@_ == 3) && (ref $jh eq 'HASH') && (ref $ja eq 'ARRAY');
+  my $fd;
+  fatal("cannot write file '$f': $!")
+    unless(open($fd, ">:raw", $f));
+  my $j = {};
+  for (qw(thumb blur)) {
+    $j->{$_} = $jh->{$_} if exists $jh->{$_};
+  }
+  $j->{data} = [ sort { $a->{stamp} <=> $b->{stamp} } @{$jh->{data}}, @$ja ];
+  $j->{version} = $VERSION;
+  $j->{timestamp} = time();
+  $j->{timecreated} = sprintf "%s", scalar localtime $j->{timestamp};
+  $j->{name} = $name if $name;
+  $j->{download} = $fdownload if $zipfile && -f $zipfile;
+  $j->{index} = $indexUrl if $indexUrl;
+  print($fd JSON::PP->new->ascii->pretty->canonical->encode($j));
+  if (close($fd)) {
+      warn "Wrote new $f\n";
+      return $f;
+  }
+  fatal "Failed to write $f: $!";
 }
 
 sub dispatch
@@ -221,9 +315,8 @@ sub pmin
   {
     my ($msg) = @_;
     lock($cnt);
-
     my $pc = ($cnt++ / $total * 100);
-    my $str = sprintf("%s %2.0f%%", $act, $pc);
+    my $str = sprintf("%s %2.0f%% completed", $act, $pc);
     $str .= ": " . $msg if $msg;
     print pad($str) . "\r";
     STDOUT->flush();
@@ -231,7 +324,7 @@ sub pmin
 
   sub done
   {
-    print(pad($act . ' completed') . "\n");
+    print pad(join ' ', $act, '100%', 'completed', @_), "\n";
   }
 }
 
@@ -240,8 +333,8 @@ sub cap_clean
 {
   my ($x) = @_;
   return '' unless $x;
-  $x =~ s/^\s+|\s+$//go;
-  $x =~ s/\s+/ /go;
+  $x =~ s{\s+}{ }go;
+  $x =~ s{^\s+|\s+$}{}go;
   return $x;
 }
 
@@ -249,7 +342,7 @@ sub cap_from_str
 {
   my ($title, $desc) = @_;
   return unless $title;
-  ($title, $desc) = split /\n+/o, $title unless $desc;
+  ($title, $desc) = split m{\n+}o, $title unless $desc;
   return [cap_clean($title), cap_clean($desc)];
 }
 
@@ -273,7 +366,7 @@ sub cap_from_props
 sub parse_wh
 {
   my ($opt, $spec) = @_;
-  my ($w, $h) = ($spec =~ /^(\d+)x(\d+)$/);
+  my ($w, $h) = ($spec =~ m{^(\d+)x(\d+)$}o);
   unless(defined($w) && $w > 0 && defined($h) && $h > 0) {
     fatal "bad WxH specification in option $opt";
   }
@@ -289,15 +382,15 @@ sub parse_int
   return int($value);
 }
 
-sub parse_caption_method
+sub parse_captions
 {
   my ($o, $v) = @_;
   return () if $v eq 'none';
-  my @cm = split(/\s,\s/o, $v);
+  my @cm = split(m{\s,\s}o, $v);
   for my $m (@cm) {
     fatal "'$m' not a caption method; use one of "
-          . join ', ', sort keys %caption_method
-      unless exists $caption_method{$m};
+          . join ', ', sort keys %captions
+      unless exists $captions{$m};
   }
   return \@cm;
 }
@@ -305,27 +398,43 @@ sub parse_caption_method
 sub parse_copy_method
 {
   my ($o, $v) = @_;
-  $v = $copy_method_default unless $v;
+  $v = $copy_method unless $v;
   fatal "'$v' not a copy method; use one of "
         . join ', ', sort keys %copy_method
     unless exists $copy_method{$v};
   return $v;
 }
 
+# given a directory return an aref of files with .$ext in that directory
+sub current_imgs
+{
+  my ($d) = @_;
+  fatal "current_imgs: '$d' not a directory" unless -d $d;
+  opendir(my $dh, $d) || fatal " Failed to open directory '$d': $!";
+  my @i = ();
+  while (readdir $dh) {
+    push @i, $_ if m{\.$ext$}o;
+  }
+  closedir $dh;
+  warn map { "$_\n" } "Current images in $d:", sort @i if $verbose > 1;
+  return \@i;
+}
+
 sub print_help
 {
-  warn qq{Usage: $me [options] INPUT_DIR OUTPUT_DIR [ALBUM_NAME]
+  warn qq{Usage: $me [options] INPUT_DIR [OUTPUT_DIR]
   -h, --help            this help
   -v                    verbosity (repeat for more detail)
-  -s                    slim output (no original files and downloads)
-  -i                    include individual originals
-  -c methods            caption extraction methods (txt,xmp,exif,cmt,none)
-  -o                    do not auto-orient
-  -k                    do not modify files, keep original
+  -s                    slim output (no original files nor album download)
+  -i                    include individual original image files
+  -c "METHODS"          caption extraction methods (txt,xmp,exif,cmt,none)
+  -o                    do not auto-orient images
+  -k                    do not modify files, keep original image files
   -t                    do not time-sort
   -r                    reverse album order
-  -u                    update existing gallery with additional files
+  -u                    add/remove images (OUTPUT_DIR optional when removing)
   -p                    do not automatically include full-sized panoramas
+  -n "ALBUM_NAME"       set album name (title in browser window)
   -d                    skip creation of a full album zip file for download
   -f                    improve thumbnail cutting by performing face detection
   -j N                  set process-level parallelism (number of workers)
@@ -335,14 +444,14 @@ sub print_help
   --min-thumb WxH       minimum thumbnail size ($minthumb[0]x$minthumb[1])
   --no-sRGB             do not remap preview/thumbnail color profiles to sRGB
   --quality Q           preview image quality (0-100, currently: $imgq)
-  --link-orig           copy method (hard,sym,ref,copy); default: $copy_method_default
-  --sharedir            ../share/sitelen-mute dir containing view subdir ($shareDir)
+  --link-orig           copy method (hard,sym,ref,copy); default: $copy_method
+  --viewdir             directory containing $me CSS/JavaScript ($viewdir)
   --index url           URL location for the index/back button
-  These options are for Facebook or Twitter and must all be provided:
+  --version             output current $me version ($VERSION)
+  Add meta tags for Facebook/Twitter (must be specified all or none):
   --url URL             URL of gallery
   --title "TITLE"       title for Facebook and Twitter previews
   --description "DESC"  description for Facebook and Twitter previews
-  --version             output current sitelen-mute version ($VERSION)
 };
   exit $_[0];
 }
@@ -353,13 +462,14 @@ sub print_help
 my ($rc, @ARGS) = GetOptions(
   'help|h' => sub { print_help(0); },
   'version' => sub { print "$0 $VERSION\n"; exit 0; },
-  'c=s' => sub { @capmethods = @{ parse_caption_method($_[0], $_[1]) }; },
+  'c=s' => sub { @captions = @{ parse_captions($_[0], $_[1]) }; },
   'd' => sub { $nodown = 1; },
   'f' => sub { $facedet = 1; },
-  'i' => sub { $ofile = 1; },
+  'i' => sub { $include = 1; },
   'j=i' => sub { $workers = parse_int($_[0], $_[1], 1, undef); },
   'o' => sub { $orient = 0; },
-  'k' => sub { $keeporig = 1; },
+  'k' => sub { $use_orig = 1; },
+  'n=s' => \$name,
   'p' => sub { $fullpano = 0; },
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
@@ -372,55 +482,58 @@ my ($rc, @ARGS) = GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = $_[1]; },
-  'title=s' => sub { $galleryTitle = $_[1]; },
-  'description=s' => sub { $galleryDescription = $_[1]; },
-  'url=s' => sub { $galleryUrl = $_[1]; },
+  'index=s' => \$indexUrl,
+  'title=s' => \$galleryTitle,
+  'description=s' => \$galleryDescription,
+  'url=s' => \$galleryUrl,
   'link-orig:s' => sub { $copy_method = parse_copy_method($_[0], $_[1]); },
-  'sharedir:s' => sub { $shareDir = $_[1]; },
+  'viewdir:s' => \$viewdir,
 );
 
-print_help(2) unless $rc && ((@ARGV == 2) || (@ARGV == 3));
+print_help(2) unless $rc && ( (@ARGV == 2) || ((@ARGV == 1) && $updating) );
 
 if (($galleryTitle || $galleryDescription || $galleryUrl)
     && !($galleryTitle && $galleryDescription && $galleryUrl)) {
   fatal "All three are required: --title, --description, and --url";
 }
 
-my ($dir, $out, $name) = @ARGV;
-my $absDir = canonpath(rel2abs($dir)) . '/';
-my $absOut = canonpath(rel2abs($out)) . '/';
-
-if (!-d $absDir) {
-  fatal "input directory '$absDir' does not exist";
-} elsif ($absDir eq $absOut) {
-  fatal "input and output directory are the same";
-} elsif (substr($absOut, 0, length($absDir)) eq $absDir) {
-  fatal "output directory is a sub-directory of input, refusing to scan";
-} elsif (!-d $absOut) {
-  mkdir $absOut || fatal "Failed to create output directory $absOut";
-  if ($copy_method eq 'sym') {
-    chdir($absOut) || die "Failed to 'cd $absOut' for symlink creation";
-    sys('ln', '-s', catfile($shareDir, 'view'));
-    sys('ln', '-s', catfile('view', 'index.html'));
-   } else {
-    sys('cp', '-L', '-R', catfile($shareDir,'view'), $absOut);
-    sys('mv', catfile(catfile($absOut,'view'),'index.html'), $absOut);
+# only -u may operate on the "input directory" (i.e., for image removals)
+($dir, $out) = @ARGV;
+$absDir = canonpath(rel2abs($dir)) . '/';
+$absOut = canonpath(rel2abs($out)) . '/' if $out;
+if ($absOut) {
+  if (!-d $absDir) {
+    fatal "input directory '$absDir' does not exist";
+  } elsif ($absDir eq $absOut) {
+    fatal "input and output directory are the same" unless $updating;
+  } elsif (substr($absOut, 0, length($absDir)) eq $absDir) {
+    fatal "output directory cannot be a sub-directory of input directory";
+  } elsif (!-d $absOut) {
+    make_path($absOut) || fatal "Failed to create output directory $absOut";
+  } elsif (!is_a_gallery($absOut)) {
+    fatal "output dir '$absOut' exists, but doesn't look like a ${me} dir";
   }
-} elsif (!is_sitelen_mute_dir($absOut)) {
-  fatal "output dir '$absOut' exists, but doesn't look like a ${me} dir";
+} else {
+  fatal "Use -u option if you want to update image removals"
+    unless $updating;
+  fatal "input directory '$absDir' does not exist"
+    unless -d $absDir;
+  $absOut = $absDir;
 }
 
-# check tools
-fatal 'Missing identify or convert executable (from ImageMagick)'
-  unless cmd_exists('identify') || cmd_exists('convert');
+# check for required commands
+for (qw(cp ln mv touch)) {
+    fatal "Command '$_' missing" unless cmd_exists($_);
+}
+fatal 'Missing convert executable (from ImageMagick)'
+  unless cmd_exists('convert');
 unless(cmd_exists('7za')) {
   $p7zip = 0;
   cmd_exists('zip') || fatal 'Missing 7z or zip command';
 }
 $jpegoptim = 0 unless cmd_exists('jpegoptim');
 $pngoptim = 0 unless cmd_exists('pngcrush');
-fatal 'Missing facedetect (see http://www.thregr.org/~wavexx/hacks/facedetect/'
+fatal "Missing facedetect (see $facedetect_url)"
   if $facedet && !cmd_exists('facedetect');
 fatal 'Missing tificc executable (from lcms2 library)'
   if $sRGB && !cmd_exists('tificc');
@@ -449,16 +562,51 @@ find(
       push(@files, $file) if exists $extensions{$suffix};
     }
   }, encode($absDir)
-);
+) unless $absOut eq $absDir;
 @files = sort @files;
-fatal "no files found in '$absDir'" unless @files;
+fatal "No image files found in '$absDir'" unless @files || $updating;
 
 # derived arguments
 my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
 my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
 
-# cleanup target paths
-unless ($updating) {
+# updating needs to use dome data from the original JSON file
+my $json_file = catfile($absOut, 'data.json');
+if (-f $json_file) {
+  unless ($updating) {
+    warn "Found $json_file; updating ...\n";
+    $updating++;
+  }
+  $odata = read_json($json_file);
+  warn Data::Dumper->Dump([$odata], ['old_json_data']), "\n"
+    if $verbose > 2;
+  for (@{$odata->{data}}) {
+    next unless exists $_->{$alg};
+    next unless exists $_->{img};
+    $ofiles->{$_->{$alg}} = $_->{img}->[0];
+    warn "SHA $_->{img}->[0]: $_->{$alg}\n" if $verbose > 1;
+  }
+  my @newfiles = ();
+  for (@files) {
+    fatal("Can't read file '$_'") unless -r $_;
+    $sha->addfile($_);
+    my $d = $sha->hexdigest();
+    $sha->reset();
+    warn "SHA $_: $d\n" if $verbose > 1;
+    push @newfiles, $_ unless $ofiles->{$d};
+  }
+  if (@newfiles) {
+    printf "Updating: %d of total %d found image files are new\n",
+      scalar @newfiles, scalar @files;
+  } else {
+    printf "Updating: None of the %d found image files are new\n",
+      scalar @files if @files;
+  }
+  @files = @newfiles;
+  $name = $odata->{name} if $odata->{name} && !$name;
+} else {
+  # cleanup target paths
+  fatal "No $json_file file found, cannot update" if $updating;
   for ( qw(thumbs blurs imgs files) ) {
     remove_tree(catfile($absOut, $_));
     make_path(catfile($absOut, $_));
@@ -466,22 +614,10 @@ unless ($updating) {
 }
 
 # disable sub-process parallelism when threading ourselves
+$workers = @files if $workers > @files;
 if ($workers) {
   $ENV{MAGICK_THREAD_LIMIT} = 1;
   $ENV{OMP_NUM_THREADS} = 1;
-}
-
-# updating requires data from the original JSON file
-my @odata;
-my %ofiles;
-if ($updating) {
-  my $fn = catfile($absOut, 'data.json');
-  my $json = slurp($fn);
-  my $data = decode_json($json);
-  @odata = @{$data->{data}};
-  warn Data::Dumper->Dump([$data], ['json_data']), "\n"
-    if $verbose > 2;
-  $ofiles{$_->{img}->[0]} = 1 for @odata;
 }
 
 # 1st pass: extract/prepare input file data
@@ -501,12 +637,6 @@ sub analyze_file
   my $sane = $base;
   $sane =~ s/[^\w\-]/_/gu;
   my $root = $sane;
-
-  # Skip this file if we're updating and it already exists in the output
-  # data.json. FIXME: Need a way to identify existing files with the
-  # autoincrement below. For the moment, this breaks for all filenames that
-  # result in duplicates after sanitizing.
-  return if $updating && exists $ofiles{catfile('imgs', "$root.$ext")};
 
   # create a new file, try with names_#.jpg until we find the first one free
   for (my $c = 0;; $c++) {
@@ -531,7 +661,7 @@ sub analyze_file
   }
 
   # extract caption
-  for my $m (@capmethods) {
+  for my $m (@captions) {
     if ($m eq 'cmt') {
       if ($props->{Comment}) {
         my $cmt = Encode::decode_utf8($props->{Comment});
@@ -564,32 +694,55 @@ sub analyze_file
 }
 
 # get image properties of files with image extensions
-warn sprintf "Analyzing %d files\n", scalar @files
-  if $verbose;
-warn map { "  $_\n" } @files
-  if $verbose > 1;
-progress::init("Reading", scalar(@files));
-my $aprops = run_in_parallel(\&analyze_file, \@files);
-progress::done();
-warn Data::Dumper->Dump([$aprops], ['$aprops']), "\n"
-  if $verbose > 2;
-
-# remove any files that failed analysis
-my @nf = ();
-my @na = ();
-my $n = 0;
-for(@files) {
-  if ( defined $aprops->[$n] ) {
-    push @nf, $_;
-    push @na, $aprops->[$n];
+if (@files) {
+  warn sprintf "Found %d prospective image files\n", scalar @files
+    if $verbose;
+  warn map { "  $_\n" } @files
+    if @files && $verbose > 1;
+  progress::init('Image file inspection', scalar @files);
+  $aprops = run_in_parallel(\&analyze_file, \@files);
+  warn Data::Dumper->Dump([$aprops], ['$aprops']), "\n"
+    if $verbose > 2;
+  # remove any files that failed analysis
+  my @nf = ();
+  my @na = ();
+  my $n = 0;
+  for (@files) {
+    if ( defined $aprops->[$n] ) {
+      push @nf, $_;
+      push @na, $aprops->[$n];
+    }
+    $n++;
   }
-  $n++;
+  progress::done(sprintf '- will now process %d image files', scalar @nf);
+  @files = @nf;
+  $aprops = \@na;
 }
-@files = @nf;
-$aprops = \@na;
 
-fatal "No image files found for processing"
-  unless @files;
+if ($updating) {
+  warn "No new image files to process\n" unless @files;
+  # but maybe some files were removed and data.json needs updating ...
+  my %o = map { $_ => 1 } values %$ofiles;
+  delete $o{catfile('imgs', $_)} for @{current_imgs(catfile($absOut, 'imgs'))};
+  # these files will need to be removed from zipfile further below
+  @deleted = map { (File::Spec->splitpath($_))[2] } keys %o;
+  if (@deleted) {
+    warn sprintf "%d image files were not found in data.json; updating\n",
+         scalar @deleted;
+    # redefined aref $odata->{data} leaving out the deleted images
+    my @ndata = ();
+    for ( @{$odata->{data}} ) {
+      if ( (exists $_->{img}) && (exists $o{$_->{img}->[0]}) ) {
+        warn "Image file $_->{img}->[0] was removed\n" if $verbose;
+        next;
+      }
+      push @ndata, $_;
+    }
+    $odata->{data} = \@ndata;
+  }
+} else {
+  warn "No image files found for processing\n" unless @files;
+}
 
 # gather dates and megapixel sizes of image files
 my $amp = 0;
@@ -610,28 +763,7 @@ for my $props (@$aprops) {
   $props->{mp} = ($props->{ImageWidth} * $props->{ImageHeight} / 1e6);
   $amp += $props->{mp};
 }
-$amp /= @files;
-
-sub copy_source_file
-{
-  my ($file, $fout) = @_;
-  my @options = ('-L');
-  my %option = (
-    hard => '--link',
-    sym  => '--symbolic-link',
-    ref  => '--reflink',
-  );
-  push @options, $option{$copy_method} if $option{$copy_method};
-
-  # symlinks need the right dest path - simplest is to give them an abs path
-  $file = rel2abs($file) if $copy_method eq 'sym';
-
-  sys('cp', @options, $file, $fout);
-
-  # adjust file mode on copy methods that create a new inode
-  chmod($filemode, $fout) if ($copy_method eq 'copy')
-                      || ($copy_method eq 'ref');
-}
+$amp /= @files if @files;
 
 # 2nd pass: produce output files
 sub process_img
@@ -653,9 +785,9 @@ sub process_img
 
   progress::status($fbase);
 
-  # copy source file and apply lossless transforms and set file mode
+  # copy source image, apply tranforms, set mode and file timestamp
   copy_source_file($file, $absFout);
-  if (!$keeporig) {
+  unless ($use_orig) {
     if ($orient && $props{FileType} eq "JPEG" && ($props{Orientation} // 0)) {
       sys("$exiftrancmd '$absFout' 2>/dev/null");
       if (($props{Orientation} // 0) > 4) {
@@ -771,15 +903,16 @@ sub process_img
 }
 
 # create thumbnails, blurs, and do face detection where required
-warn sprintf "Processing %d files\n", scalar @$aprops
-  if $verbose;
-warn map { "  $_\n" } map { $_->{file} } @$aprops
-  if $verbose > 1;
-progress::init("Processing", scalar(@$aprops));
-my $adata = run_in_parallel(\&process_img, $aprops);
-progress::done();
-warn Data::Dumper->Dump([$adata], ['$adata']), "\n"
-  if $verbose > 2;
+if (@$aprops) {
+  warn map { "  $_\n" } map { $_->{file} } @$aprops
+    if $verbose > 1;
+  my $msg = sprintf "Processing of %d image files", scalar @$aprops;
+  progress::init($msg, scalar(@$aprops));
+  $adata = run_in_parallel(\&process_img, $aprops);
+  progress::done();
+  warn Data::Dumper->Dump([$adata], ['$adata']), "\n"
+    if $verbose > 2;
+}
 
 # sorting
 if ($timesort) {
@@ -787,112 +920,113 @@ if ($timesort) {
   $adata = [ reverse @$adata ] if $revsort;
 }
 
-# create an album zip file
-my $fdownload = undef;
-unless ($nodown || $slim) {
-  print("Creating ZIP archive of album\n");
-
-  $fdownload = 'files/album.zip';
-  my @files = map { catfile($absOut, $_->{file}[0]) } @$adata;
-
-  if (!$p7zip) {
-    sys('zip', '-q9j', catfile($absOut, $fdownload), @files);
+# create or update the album zip file
+$zipfile = catfile($absOut, $fdownload);
+if ($nodown || $slim) {
+  unlink $zipfile;
+} else {
+  if (@$adata) {
+    my @f = map { catfile($absOut, $_->{file}[0]) } @$adata;
+    if ($p7zip) {
+      my $mt = $workers ? "-mmt=$workers" : '';
+      sys('7za', '-tzip', $mt, 'a', '--', $zipfile, @f);
+    } else {
+      sys('zip', '-q9j', $zipfile, @f);
+    }
+    warn sprintf "Updated %s with %d image files\n", $zipfile, scalar @f;
+  }
+}
+if (@deleted && -f $zipfile) {
+  if ($p7zip) {
+    sys('7za', '-tzip', 'd', '--', $zipfile, @deleted);
   } else {
-    # make paths explicitly absolute/relative to strip file path info with 7za
-    my $dot = substr($absOut, 0, 1);
-    if ($dot ne '/' && $dot ne '.') {
-      @files = map { "./$_" } @files;
-    }
-
-    my $mt = $workers ? "-mmt=$workers" : '';
-    sys('7za', '-tzip', $mt, 'a', '--', catfile($absOut, $fdownload), @files);
+    sys('zip', '-q9j', '-d', $zipfile, @deleted);
   }
+  unlink catfile($absOut, 'files', $_) for @deleted;
+  warn sprintf "Removed %d image files from %s\n", scalar @deleted, $zipfile;
 }
 
-# remove superfluous raw files
-if (!$ofile || $slim) {
-  for my $fdata (@$adata) {
-    my $file = catfile($absOut, $fdata->{file}[0]);
-    my $keep = !$slim && $ofile;
-
-    if (!$slim && !$keep && $fullpano) {
-      my ($x, $y) = @{$fdata->{file}[1]};
-      my $mp = ($x * $y / 1e6);
-
-      # try to see if the source file is just a crop of the original
-      my $ox = $fdata->{props}{OrigImageWidth} // 0;
-      my $oy = $fdata->{props}{OrigImageHeight} // 0;
-      my $omp = ($ox * $oy / 1e6);
-
-      $keep = 1 if ($mp >= $omp) && ($mp > $amp) && (abs($x/$y) >= $panort);
-    }
-
-    unless ($keep) {
-      unlink($file);
-      delete($fdata->{file});
-      warn "Deleted superfluous raw file '$file'\n" if $verbose > 1;
-    }
-  }
-}
-
-# attempt to remove the directory (succeeds when empty)
-rmdir(catfile($absOut, 'files'));
-
-# generate json
-my %json;
-$json{version} = $VERSION;
-$json{name} = $name if ($name);
-$json{download} = $fdownload if ($fdownload);
-$json{index} = $indexUrl if ($indexUrl);
+# prepare and write out the new data.json
+my %json = (
+  data => [],
+  thumb => { min => \@minthumb, max => \@maxthumb },
+);
 $json{blur} = \@backsize if $do_blur;
-$json{thumb} = { min => \@minthumb, max => \@maxthumb };
-
-# prepare data.json
 for my $fdata (@$adata) {
   my %data;
-  for ( qw(img thumb file blur center) ) {
+  for ( qw(img thumb blur center) ) {
     $data{$_} = $fdata->{$_} if defined $fdata->{$_};
   }
   for ( qw(date stamp caption) ) {
     $data{$_} = $fdata->{props}{$_} if defined $fdata->{props}{$_};
   }
-  push(@{$json{data}}, \%data);
+  my $file = catfile($absOut, $fdata->{file}[0]);
+  fatal("No such file '$file'") unless -f $file;
+  fatal("Can't read file '$file'") unless -r _;
+  $sha->addfile($file);
+  my $d = $sha->hexdigest();
+  $sha->reset();
+  $data{$alg} = $d;
+  push(@{$json{data}}, \%data)
+    unless (exists $ofiles->{$d}) && ($ofiles->{$d} = $data{stamp});
+  # remove superfluous raw files
+  my $keep = !$slim && $include;
+  unless ($slim || $keep || !$fullpano) {
+    my ($x, $y) = @{$fdata->{file}[1]};
+    my $mp = ($x * $y / 1e6);
+    # see if the source file is just a crop of the original
+    my $ox = $fdata->{props}{OrigImageWidth} // 0;
+    my $oy = $fdata->{props}{OrigImageHeight} // 0;
+    my $omp = ($ox * $oy / 1e6);
+    $keep = 1 if ($mp >= $omp) && ($mp > $amp) && (abs($x/$y) >= $panort);
+  }
+  unless ($keep) {
+    unlink($file);
+    warn "Deleted superfluous raw file '$file'\n" if $verbose > 1;
+  }
 }
+write_json(catfile($absOut, 'data.json'), \%json, $odata->{data});
 
-$json{data} = [sort { $a->{stamp} <=> $b->{stamp} } @{$json{data}}, @odata]
-  if $updating;
+# remove the files directory when empty
+rmdir(catfile($absOut, 'files'));
 
-# write out json
-my $fd;
-my $dj = catfile($absOut, 'data.json');
-fatal "cannot write file '$dj': $!" unless open($fd, ">:raw", $dj);
-print $fd
-      JSON::PP->new->ascii->pretty->canonical->allow_blessed->encode(\%json);
-close $fd;
-
+# (re-)setup copy/link of view subdirectory
+my $vdir = catfile($absOut, 'view');
+remove_tree($vdir) if $updating;
+unless (-d $vdir) {
+  chdir($absOut) || fatal "Failed to 'cd $absOut' for symlink creation";
+  if ($copy_method eq 'sym') {
+    sys('ln', '-s', $viewdir, '.');
+   } else {
+    sys('cp', '-LR', $viewdir, '.');
+  }
+}
+# craft the index.html contents from the actual data.json file
+my $html = qq{\n    <div id="photos" } .
+           qq{itemscope itemtype="http://schema.org/ImageGallery">\n};
+$html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n}
+    if $galleryTitle;
+$html .= qq{\t<p itemprop="description">$galleryDescription</p>\n}
+    if $galleryDescription;
+$html .= qq{\t<div id="wrapper">};
+# enumerate the images for noscript
 my $id = -1;
-my $html = qq{\n      <div id="photos" itemscope itemtype="http://schema.org/ImageGallery">\n};
-$html .= qq{\t<h1 itemprop="name">$galleryTitle</h1>\n} if $galleryTitle;
-$html .= qq{\t<p itemprop="description">$galleryDescription</p>\n} if $galleryDescription;
-$html .= qq{\t<div id="wrapper">\n};
-$html .= qq{\t  };
-# all the images for noscript
-$html .= join("\n\t  ", map {
+$adata = read_json($json_file);
+for (@{$adata->{data}}) {
+  my $c = (splitpath($_->{img}[0]))[2];
+  $c = $_->{caption} if exists $_->{caption};
+  my $f = $_->{img}[0];
+  my $t = $_->{thumb}[0];
   $id++;
-  my $props = $_->{props};
-  my $root = $props->{root};
-  my $fbase = "$root.$ext";
-  my $file = $props->{file};
-  my $caption = $props->{caption} ? $props->{caption}[0] : $root;
-  qq{<a id="$id" href="imgs/$fbase" title="$caption">}
-  . qq{<img src="thumbs/$fbase" alt="$caption"/></a>}
-} @$adata);
+  $html .= qq{\n\t  <a id="$id" href="$f" title="$c">}
+         . qq{<img src="$t" alt="$c"/></a>};
+}
 $html .= qq{\n\t</div>\n};
-$html .= qq{      </div>\n};
+$html .= qq{    </div>\n};
 $html .= qq{    };
-my $index = slurp(catfile($absOut, 'index.html'));
-$index =~ s!<noscript>.*?</noscript>!<noscript>$html</noscript>!s;
-
+my $indexhtml = slurp(catfile($absOut, 'view', 'index.html'));
+$indexhtml =~ s@<noscript>.*?</noscript>@<noscript>$html</noscript>@s;
+# include the optional social media decoration
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
   my $galleryImage = $adata->[0]->{props}->{root} . ".$ext";
@@ -909,15 +1043,35 @@ if ($galleryTitle && $galleryDescription && $galleryUrl) {
     <meta name="twitter:description" content="$galleryDescription" />
     <meta name="twitter:image" content="${galleryUrl}imgs/$galleryImage" />
   };
-  $index =~ s@    <!-- for Facebook -->\n(    .*\n)*@@;
-  $index =~ s@  </head>@$html  </head>@;
+  $indexhtml =~ s@    <!-- for Facebook -->\n(    .*\n)*@@;
+  $indexhtml =~ s@  </head>@$html  </head>@;
 }
 
-open($fd, ">:encoding($ENCODING)", catfile($absOut, 'index.html'))
-  || fatal "cannot write new index file: $!";
-print $fd $index;
-close $fd;
+# and finally, write out the new index.html and noscript.html files
+my $index = catfile($absOut, 'index.html');
+my $fd;
+open($fd, ">:encoding($ENCODING)", $index)
+  || fatal "cannot write $index: $!";
+print $fd $indexhtml;
+if (close $fd) {
+  warn "Wrote new $index\n";
+} else {
+  fatal "Failed to write new $index: $!\n";
+}
+my $noscript = catfile($absOut, 'noscript.html');
+open($fd, ">:encoding($ENCODING)", $noscript)
+  || fatal "cannot write $noscript: $!";
+for (split m{\n+}o, $indexhtml) {
+  next if m{^\s*</?(no)?script\s*}o;
+  print $fd $_, "\n";
+}
+if (close $fd) {
+  warn "Wrote new $noscript\n";
+} else {
+  fatal "Failed to write new $noscript: $!\n";
+}
 
-print "$0 version $VERSION done for $absOut\n";
+print sprintf "%s version %s %s gallery in %s\n",
+      $me, $VERSION, $updating ? 'updated' : 'created', $absOut;
 
 exit 0;
