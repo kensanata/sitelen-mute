@@ -4,6 +4,11 @@
 with a minimalist look and feel. It shows your photos (and optionally
 detects faces so they aren't cropped in the thumbnails).
 
+*efgallery* stands for "extended fgallery" as it was inspired from
+the `fgallery` 1.x version. During 2017 it received many enhancements
+and was forked after the original developer said that he had moved
+on, deserving a version bump to 2.x und a new name echoing its roots.
+
 You can see example galleries here:
 
 - https://www.thregr.org/~wavexx/software/fgallery/demo/ (fgallery version 1.x)
