@@ -1062,6 +1062,7 @@ if ($galleryTitle && $galleryDescription && $galleryUrl) {
 
 # and finally, write out the new index.html and noscript.html files
 my $index = catfile($absOut, 'index.html');
+unlink($index);
 my $fd;
 open($fd, ">:encoding($ENCODING)", $index)
   || fatal "cannot write $index: $!";
