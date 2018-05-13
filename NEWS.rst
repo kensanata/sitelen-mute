@@ -1,11 +1,8 @@
-sitelen-mute 2.0.0. 2018-05-11
+efgallery 2.0.0. 2018-05-11
 ------------------------------
 
-* Forked and Changed name from fgallery
-* Applied a number of patches from various people
-* Support for browsers with Javascript disabled
-* Support for meta data used by social media sites
-* Overview page
+* Forked and changed name from fgallery / sitelen-mute
+* Update feature
 
 fgallery 1.8.2: 2016-05-25
 --------------------------

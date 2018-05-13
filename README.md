@@ -1,15 +1,18 @@
-# Sitelen Mute: a static, minimalist javascript photo gallery
+# efgallery: a minimalist javascript photo gallery
 
-*Sitelen Mute* is a static photo gallery generator with no frills that has a
-stylish, minimalist look. It shows your photos, and nothing else.
+*efgallery* is a static photo gallery generator written in Perl
+with a minimalist look and feel. It shows your photos (and optionally
+detects faces so they aren't cropped in the thumbnails).
 
-You can see example galleries at the following address:
+You can see example galleries here:
 
+https://www.thregr.org/~wavexx/software/fgallery/demo/
+https://marabu.ch/efgallery/demo
 https://alexschroeder.ch/gallery
 
-There is no server-side processing, only static generation. The resulting
-gallery can be uploaded anywhere without additional requirements and works with
-any modern browser.
+There is no server-side processing, only static generation. The
+resulting gallery can be uploaded anywhere without any additional
+requirements on the web server or browser.
 
 - Automatically orients pictures without quality loss.
 - Multi-camera friendly: automatically sorts pictures by time: just throw your
@@ -22,27 +25,26 @@ any modern browser.
 - Includes original (raw) pictures in a zip file for downloading.
 - Panoramas can be seen full-size by default.
 
-The name is [Toki Pona](https://tokipona.org/) for "many pictures",
-i.e. a gallery. It's a friendly fork from `fgallery` because the
-author said that their mind is
-[on other projects](https://github.com/wavexx/fgallery/pull/76#issuecomment-368947439)
-right now.
+This github repository will serve to cherry pick features coming
+from the other fgallery versions out there and is the master site
+for the [pkgsrc package] http://pkgsrc.se/wip/efgallery/.
 
 ## Usage
 
-Generate all the static files with `./sitelen-mute`:
+Generate all the static files with `./efgallery`:
 
 ```
-./sitelen-mute photo-dir my-gallery
+./efgallery photo-dir my-gallery
 ```
 
 Upload `my-gallery` somewhere.
 
 To test or preview the gallery locally using Firefox, you can just
-open the file `my-gallery/index.html`. On other browsers you need a
-web server (due to
-[same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy)).
-If you have Python installed, a quick way to test the gallery locally
+open the file `my-gallery/index.html` or `my-gallery/noscript.html`.
+
+On other browsers you need a web server (due to [same-origin
+policy](https://en.wikipedia.org/wiki/Same-origin_policy)).  If
+you have Python installed, a quick way to test the gallery locally
 is to run the following:
 
 ```
@@ -54,70 +56,19 @@ This serves all the files from `http://localhost:8000`.
 
 ## Pre-built packages
 
-Pre-built packages for *Sitelen Mute* are not yet available anywhere.
+Pre-built packages for *efgallery* are not generally not needed as
+it's just a Perl script and some static CSS and JavaScript.
 
-You can get pre-built packages for the predecessor `fgallery`, though.
+*efgallery* is a [pkgsrc|https://www.pkgsrc.org/] package, and as
+such can be downloaded from there.
 
-Pre-built packages for `facedetect` should be available from your distribution.
+Otherwise, if you're lucky, you might be able to get pre-built
+packages for your platform for the predecessor `fgallery` or
+`sitelen-mute`.
 
-### Debian, Ubuntu
-
-```
-sudo apt-get install fgallery facedetect
-```
-
-### Arch Linux
-
-```
-sudo pacman -S fgallery
-```
-
-### Gentoo Linux
-
-```
-sudo layman -a robert7k
-sudo emerge www-apps/fgallery
-```
-
-### NixOS
-
-```
-sudo nix-env -i fgallery
-```
-
-### FreeBSD
-
-```
-pkg install fgallery
-```
-
-### Docker
-
-```
-# Set the initial environment variables
-SOURCE_DIRECTORY="$HOME/mypictures/album1"
-DESTINATION_DIRECTORY="/var/tmp/my_web_sitelen_mute_photo_album"
-
-# Check the SOURCE_DIRECTORY with pictures
-ls -ld $SOURCE_DIRECTORY/*jpg
--rw-r--r-- 1 user user 690978 Feb  4  2003 /home/user/mypictures/album1/20030204-222803.jpg
--rw-r--r-- 1 user user 733873 Feb  4  2003 /home/user/mypictures/album1/20030204-222819.jpg
-
-# Generate gallery with face detection enabled
-docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
-	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
-	/mnt /destination/`basename $DESTINATION_DIRECTORY`-1 -f -j $(nproc)
-
-# Generate gallery with face detection enabled, slim output (no original files
-# and downloads), maximum full image size (1920x1080) and do not generate a
-# full album download
-docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
-	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
-	/mnt /destination/`basename $DESTINATION_DIRECTORY`-2 -s -d -f -j $(nproc) \
-	--max-full 1920x1080
-```
-
-(Thanks to: https://github.com/skorokithakis/docker-fgallery and https://github.com/pank/docker-fgallery)
+Pre-built packages for the optional `facedetect` executable might
+also be available from your distribution; the pkgsrc version includes
+it as a dependency to *efgallery*.
 
 ## Usage notes
 
@@ -176,7 +127,7 @@ To simply favor photos shot in portrait format, invert the
 width/height of the thumbnail sizes::
 
 ```
-./sitelen-mute --min-thumb 112x150 --max-thumb 200x267 ...
+./efgallery --min-thumb 112x150 --max-thumb 200x267 ...
 ```
 
 This will force the thumbnails to always fit vertically, at the
@@ -192,7 +143,7 @@ enabled, there's generally no need to increase the thumbnail size.
 
 ## Image captioning
 
-Several sources for image captions are automatically read by *Sitelen Mute*.
+Several sources for image captions are automatically read by *efgallery*.
 These can be customized though the `-c` flag in the command line,
 which consists of a comma-separated list of any of the following:
 
@@ -281,7 +232,7 @@ method of enabling CM only on images with an ICC profile is clearly
 not adequate, since images without a profile should be assumed to be
 in sRGB color-space already.
 
-Because of the general lack of color management, *Sitelen Mute*
+Because of the general lack of color management, *efgallery*
 transforms the preview and thumbnail images from the built-in color
 profile to the sRGB color-space by default. On most devices this will
 result in images appearing to be *closer* to true colors with only
@@ -363,40 +314,31 @@ sudo port install p5-image-exiftool p5-cpanel-json-xs
 
 ## Installation
 
-Installation is currently optional. If needed, copy the extracted
-directory to a directory of your liking and link `sitelen-mute`
+Installation is currently manual. If needed, copy the extracted
+directory to a directory of your liking and link `efgallery`
 appropriately:
 
 ```
-sudo cp -r sitelen-mute-X.Y /usr/local/share/sitelen-mute
-sudo ln -s /usr/local/share/sitelen-mute/sitelen-mute /usr/local/bin
+sudo cp -r efgallery-X.Y /usr/local/share/efgallery
+sudo ln -s /usr/local/share/efgallery/efgallery /usr/local/bin
 ```
 
 ## Authors and Copyright
 
-[Sitelen Mute](https://github.com/kensanata/sitelen-mute) grew out of
-[fgallery](https://github.com/wavexx/fgallery). *fgallery* was
-developed by Yuri D'Elia. *Sitelen Mute* is being developed by Alex
-Schroeder.
+[efgallery](https://github.com/0-ast-0/efgallery) grew out of the
+initial version "1.x" [fgallery](https://github.com/wavexx/fgallery/)
+developed by Yuri D'Elia.
 
-## Extending Sitelen Mute
+Version "2.x" was started by Alex Schroeder which merged many of
+my languishing pull requests to fgallery. He renamed it
+[sitelen-mute](https://github.com/kensanata/sitelen-mute/) and
+intends to continue development.
 
-*Sitelen Mute* is composed of a backend (the `sitelen-mute` script)
-and a viewer (contained in the `view` directory). Both are distributed
-as one package, but they are designed to be used independently.
-
-The backend just cares about generating the image previews and the
-album data. All the presentation logic however is inside the viewer.
-
-It's relatively easy to generate the album data dynamically and just
-use the viewer. This was Yuri D'Elia's aim when they started to develop
-*fgallery*, as it's much easier to just modify an existing CMS instead
-of trying to reinvent the wheel. All a backend has to do is provide a
-valid "data.json" at some prefixed address.
+The original copyright GPLv2+ applies.
 
 ## Todo
 
-- Videos
+- Enable a simple gallery on a systen without ImageMagick
 
 - "Live" images as created by iPhones consisting of a JPEG cover image
   and a very short video

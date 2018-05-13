@@ -1,9 +1,8 @@
-.Dd 2015-11-30
-.Dt SITELEN-MUTE 1
-.\" (C) Copyright 2015 Guus Sliepen <guus@debian.org>,
+.Dd 2018-05-13
+.Dt EFGALLERY 1
 .Sh NAME
-.Nm sitelen-mute
-.Nd static HTML+JavaScript photo album generator
+.Nm efgallery
+.Nd static HTML, JavaScript, CSS photo album generator in Perl
 .Sh SYNOPSIS
 .Nm
 .Op Fl hvsiotrpdf
@@ -15,14 +14,14 @@
 .Op Fl -no-sRGB
 .Op Fl -quality Ar Q
 .Op Fl -index Ar URL
+.Op Fl n Ar album name
 .Ar input-dir
 .Ar output-dir
-.Op Ar album name
 .Sh DESCRIPTION
 .Nm
-is a static photo gallery generator with no frills that has a stylish, minimalist look.
+is a static photo gallery generator with a minimalist look and feel.
 .Nm
-shows your photos, and nothing else.
+shows your photos.
 There is no server-side processing, only static generation.
 The resulting gallery can be uploaded anywhere without additional requirements and works with any modern browser.
 JavaScript is required to view the gallery.
@@ -112,11 +111,9 @@ Use
 .Ar N
 threads to process the images.
 .It Fl u
-Update an existing gallery by adding any new images. If you edit
-images or change captions, this will not be picked up. You can force
-an update of individual images my deleting their entry from the
-.Pa data.json
-file in the existing gallery.
+Update an existing gallery by adding additional new images.  You
+can force an update of individual images my deleting them from the
+img subdirectory in an existing gallery.
 .It Fl -max-full Ar WxH
 Set the maximum full image size to
 .Ar WxH
@@ -168,6 +165,15 @@ The first image in the gallery will be used as the preview image.
 .Xr tificc 1 ,
 .Xr facedetect 1 Pq see Pa https://www.thregr.org/~wavexx/software/facedetect/ .
 .Sh AUTHORS
-.Nm
-was written by
-.An "Yuri D'Elia" Aq wavexx@thregr.org .
+An early version called
+.Xr fgallery
+was originally written by
+.An "Yuri D'Elia" Aq wavexx@thregr.org ;
+As of 2018 it is being developed and maintained by
+.An "Alex Schroeder" Aq alex@gnu.org
+as
+.Xr sitelen-mute
+and
+.An "Adrian Steinmann" Aq ast@marabu.ch
+as
+.Nm .

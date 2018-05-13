@@ -10,7 +10,7 @@ import locale
 
 from PyQt4 import QtCore, QtGui
 
-APP_DESC = "Sitelen Mute image caption editor"
+APP_DESC = "efgallery image caption editor"
 ENCODING = locale.getpreferredencoding()
 FILE_EXT = ["jpg", "jpeg", "png", "tif", "tiff"]
 

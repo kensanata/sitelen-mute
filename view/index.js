@@ -1,4 +1,4 @@
-// Sitelen Mute: a modern, minimalist javascript photo gallery
+// efgallery: a modern, minimalist javascript photo gallery
 // Copyright(c) 2011-2016 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
 // Distributed under GPLv2+ (see COPYING) WITHOUT ANY WARRANTY.
 "use strict";
