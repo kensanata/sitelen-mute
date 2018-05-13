@@ -27,7 +27,7 @@ requirements on the web server or browser.
 
 This github repository will serve to cherry pick features coming
 from the other fgallery versions out there and is the master site
-for the [pkgsrc package] http://pkgsrc.se/wip/efgallery/.
+for the [pkgsrc package](http://pkgsrc.se/wip/efgallery/).
 
 ## Usage
 
@@ -56,11 +56,12 @@ This serves all the files from `http://localhost:8000`.
 
 ## Pre-built packages
 
-Pre-built packages for *efgallery* are not generally not needed as
-it's just a Perl script and some static CSS and JavaScript.
+Pre-built packages for *efgallery* are not generally required as
+it's just a Perl script and some static CSS and JavaScript which
+can be installed maually.
 
-*efgallery* is a [pkgsrc|https://www.pkgsrc.org/] package, and as
-such can be downloaded from there.
+That said, *efgallery* is a [pkgsrc](https://www.pkgsrc.org/)
+package, and as such can be downloaded from there.
 
 Otherwise, if you're lucky, you might be able to get pre-built
 packages for your platform for the predecessor `fgallery` or
@@ -68,7 +69,7 @@ packages for your platform for the predecessor `fgallery` or
 
 Pre-built packages for the optional `facedetect` executable might
 also be available from your distribution; the pkgsrc version includes
-it as a dependency to *efgallery*.
+`facedetect` it as a dependency to *efgallery*.
 
 ## Usage notes
 
