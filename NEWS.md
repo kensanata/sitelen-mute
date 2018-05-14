@@ -1,3 +1,6 @@
+NEWS
+====
+
 sitelen-mute 2.0.0. 2018-05-11
 ------------------------------
 
@@ -13,9 +16,9 @@ fgallery 1.8.2: 2016-05-25
 * Allow to generate a gallery directly on filesystems without hard-links.
 * Fix generation failure on BSD systems (use a common set of "cp" arguments).
 * Handle more malformed/missing EXIF timestamps.
-* Use ``Cpanel::JSON::XS`` instead of ``JSON::XS`` (fixing errors in recent
+* Use `Cpanel::JSON::XS` instead of `JSON::XS` (fixing errors in recent
   unsupported combinations of Perl / JSON::XS and threads).
-* New ``fgallery`` man page provided by Guus Sliepen.
+* New `fgallery` man page provided by Guus Sliepen.
 
 
 fgallery 1.8.1: 2016-02-02
@@ -30,11 +33,11 @@ fgallery 1.8: 2016-01-14
 
 * Handle bogus whitespace in EXIF timestamps.
 * Ignore hidden/invalid files instead of failing.
-* Support ``tificc2`` as an alias to ``tificc`` (for Fedora).
-* Avoid calling ``tificc`` for images already in sRGB.
+* Support `tificc2` as an alias to `tificc` (for Fedora).
+* Avoid calling `tificc` for images already in sRGB.
 * Load thumbnails on-demand for faster loading of large galleries.
 * Extract and visualize image captions.
-* Added ``utils/fcaption`` to edit image captions.
+* Added `utils/fcaption` to edit image captions.
 
 
 fgallery 1.7: 2014-09-05
@@ -52,12 +55,12 @@ fgallery 1.6: 2014-04-17
 
 * Do not produce warnings when reading files without suffix.
 * Strip EXIF metadata from image previews and thumbnails.
-* We now require the ``Image::ExifTool`` perl module to extract EXIF
-  information (``libimage-exiftool-perl``).
+* We now require the `Image::ExifTool` perl module to extract EXIF
+  information (`libimage-exiftool-perl`).
 * Preview/thumbnail images are now converted to sRGB colorspace by default
-  (``liblcms2-utils`` required) for improved color appearance across devices.
+  (`liblcms2-utils` required) for improved color appearance across devices.
 * Fixed mixing/sorting of images without EXIF data.
-* A customizable URL (``--index``) can be specified on the command line to put
+* A customizable URL (`--index`) can be specified on the command line to put
   a back-link in the gallery header.
 * Reduced the payload size.
 
@@ -84,11 +87,11 @@ fgallery 1.3: 2014-01-05
 
 * Improved browser behavior of the `back` button.
 * Fixed incorrect thumbnail stretch for certain image ratios.
-* Fixed empty thumbnail list in old browsers without ``devicePixelRatio``.
-* Fixed incorrect usage of ``pngcrush``, resulting in stray PNG output files.
+* Fixed empty thumbnail list in old browsers without `devicePixelRatio`.
+* Fixed incorrect usage of `pngcrush`, resulting in stray PNG output files.
 * Gallery generation speedup with parallelism/multi-core support (`-j`).
-* Can use ``p7zip`` when installed for faster compression.
-* Perl dependency on ``Date::Parse`` removed.
+* Can use `p7zip` when installed for faster compression.
+* Perl dependency on `Date::Parse` removed.
 * Minor/cosmetic improvements.
 
 
