@@ -26,7 +26,8 @@ The name is [Toki Pona](https://tokipona.org/) for "many pictures",
 i.e. a gallery. It's a friendly fork from `fgallery` because the
 author said that their mind is
 [on other projects](https://github.com/wavexx/fgallery/pull/76#issuecomment-368947439)
-right now.
+right now. It also includes some patches from
+[efgallery](https://github.com/0-ast-0/efgallery), a different fork.
 
 ## Usage
 
@@ -56,42 +57,14 @@ This serves all the files from `http://localhost:8000`.
 
 Pre-built packages for *Sitelen Mute* are not yet available anywhere.
 
-You can get pre-built packages for the predecessor `fgallery`, though.
-
 Pre-built packages for `facedetect` should be available from your distribution.
 
-### Debian, Ubuntu
-
-```
-sudo apt-get install fgallery facedetect
-```
-
-### Arch Linux
-
-```
-sudo pacman -S fgallery
-```
-
-### Gentoo Linux
-
-```
-sudo layman -a robert7k
-sudo emerge www-apps/fgallery
-```
-
-### NixOS
-
-```
-sudo nix-env -i fgallery
-```
-
-### FreeBSD
-
-```
-pkg install fgallery
-```
+Want to be the maintainer for one of the many systems out there? Let
+me know.
 
 ### Docker
+
+Want to be the maintainer for the Docker code? Let me know!
 
 ```
 # Set the initial environment variables
