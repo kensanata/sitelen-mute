@@ -10,12 +10,12 @@ https://alexschroeder.ch/gallery
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
+- [Features](#features)
 - [Usage](#usage)
 - [Pre-built packages](#pre-built-packages)
 - [Docker](#docker)
 - [Set the initial environment variables](#set-the-initial-environment-variables)
 - [Check the SOURCE_DIRECTORY with pictures](#check-the-sourcedirectory-with-pictures)
-- [Generate gallery with face detection enabled](#generate-gallery-with-face-detection-enabled)
 - [Usage notes](#usage-notes)
 - [Tuning thumbnail generation](#tuning-thumbnail-generation)
 - [Portraits and face detection](#portraits-and-face-detection)
