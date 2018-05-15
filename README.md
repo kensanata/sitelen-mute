@@ -79,6 +79,18 @@ python -m SimpleHTTPServer 8000
 
 This serves all the files from `http://localhost:8000`.
 
+For a real world example including face detection and meta data for
+social media, and using Perl Brew because this system's Perl doesn't
+have thread support:
+
+```
+perlbrew exec --with perl-5.22.0-thread-multi ~/src/sitelen-mute/fgallery -f --title "Japan 2018" \
+--description "Alex, Zeno und seine Kinder, und Chris mit Frau und Kindern machen Ferien in Japan." \
+--url https://alexschroeder.ch/gallery/2018-japan/ \
+/Volumes/Data/Pictures/Fotos\ 2018/Japan/Album/ \
+/Volumes/Data/Pictures/Fotos\ 2018/2018-japan
+```
+
 ## Pre-built packages
 
 Pre-built packages for *Sitelen Mute* are not yet available anywhere.
