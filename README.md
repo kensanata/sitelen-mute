@@ -7,6 +7,32 @@ You can see example galleries at the following address:
 
 https://alexschroeder.ch/gallery
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Usage](#usage)
+- [Pre-built packages](#pre-built-packages)
+    - [Docker](#docker)
+- [Set the initial environment variables](#set-the-initial-environment-variables)
+- [Check the SOURCE_DIRECTORY with pictures](#check-the-sourcedirectory-with-pictures)
+- [Generate gallery with face detection enabled](#generate-gallery-with-face-detection-enabled)
+- [Usage notes](#usage-notes)
+- [Tuning thumbnail generation](#tuning-thumbnail-generation)
+- [Portraits and face detection](#portraits-and-face-detection)
+- [Image captioning](#image-captioning)
+- [Color management](#color-management)
+- [Technical details](#technical-details)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Authors](#authors)
+- [License](#license)
+- [Extending Sitelen Mute](#extending-sitelen-mute)
+- [Todo](#todo)
+
+<!-- markdown-toc end -->
+
+## Features
+
 There is no server-side processing, only static generation. The resulting
 gallery can be uploaded anywhere without additional requirements and works with
 any modern browser.
@@ -28,27 +54,6 @@ author said that their mind is
 [on other projects](https://github.com/wavexx/fgallery/pull/76#issuecomment-368947439)
 right now. It also includes some patches from
 [efgallery](https://github.com/0-ast-0/efgallery), a different fork.
-
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
-
-- [Usage](#usage)
-- [Pre-built packages](#pre-built-packages)
-- [Usage notes](#usage-notes)
-- [Tuning thumbnail generation](#tuning-thumbnail-generation)
-- [Portraits and face detection](#portraits-and-face-detection)
-- [Image captioning](#image-captioning)
-- [Color management](#color-management)
-- [Technical details](#technical-details)
-- [Dependencies](#dependencies)
-- [Installation](#installation)
-- [Authors](#authors)
-- [License](#license)
-- [Extending Sitelen Mute](#extending-sitelen-mute)
-- [Todo](#todo)
-
-<!-- markdown-toc end -->
-
 
 ## Usage
 
@@ -83,7 +88,36 @@ Pre-built packages for `facedetect` should be available from your distribution.
 Want to be the maintainer for one of the many systems out there? Let
 me know.
 
-Want to be the maintainer for the Docker code? Let me know!
+## Docker
+
+You can look at the status of the
+[latest builds on Docker Hub](https://hub.docker.com/r/kensanata/sitelen-mute/builds/).
+
+```
+# Set the initial environment variables
+SOURCE_DIRECTORY="$HOME/mypictures/album1"
+DESTINATION_DIRECTORY="/var/tmp/my_web_sitelen_mute_photo_album"
+
+# Check the SOURCE_DIRECTORY with pictures
+ls -ld $SOURCE_DIRECTORY/*jpg
+-rw-r--r-- 1 user user 690978 Feb  4  2003 /home/user/mypictures/album1/20030204-222803.jpg
+-rw-r--r-- 1 user user 733873 Feb  4  2003 /home/user/mypictures/album1/20030204-222819.jpg
+
+# Generate gallery with face detection enabled
+docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
+	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
+	/mnt /destination/`basename $DESTINATION_DIRECTORY`-1 -f -j $(nproc)
+
+# Generate gallery with face detection enabled, slim output (no original files
+# and downloads), maximum full image size (1920x1080) and do not generate a
+# full album download
+docker run --rm -it -u $(id -u):$(id -g) -v "$SOURCE_DIRECTORY":/mnt:ro \
+	-v "`dirname $DESTINATION_DIRECTORY`":/destination kensanata/sitelen-mute \
+	/mnt /destination/`basename $DESTINATION_DIRECTORY`-2 -s -d -f -j $(nproc) \
+	--max-full 1920x1080
+```
+
+(Thanks to: https://github.com/skorokithakis/docker-fgallery and https://github.com/pank/docker-fgallery)
 
 ## Usage notes
 
