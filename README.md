@@ -49,11 +49,7 @@ any modern browser.
 - Panoramas can be seen full-size by default.
 
 The name is [Toki Pona](https://tokipona.org/) for "many pictures",
-i.e. a gallery. It's a friendly fork from `fgallery` because the
-author said that their mind is
-[on other projects](https://github.com/wavexx/fgallery/pull/76#issuecomment-368947439)
-right now. It also includes some patches from
-[efgallery](https://github.com/0-ast-0/efgallery), a different fork.
+i.e. a gallery.
 
 ## Usage
 
@@ -387,9 +383,13 @@ sudo ln -s /usr/local/share/sitelen-mute/sitelen-mute /usr/local/bin
 ## Authors
 
 [Sitelen Mute](https://github.com/kensanata/sitelen-mute) grew out of
-[fgallery](https://github.com/wavexx/fgallery). *fgallery* was
-developed by Yuri D'Elia. *Sitelen Mute* is being developed by Alex
-Schroeder with patches by Adrian Steinmann.
+[fgallery](https://github.com/wavexx/fgallery) by Yuri D'Elia because
+the author said that their mind is
+[on other projects](https://github.com/wavexx/fgallery/pull/76#issuecomment-368947439)
+right now. *Sitelen Mute* is being developed by Alex
+Schroeder with contributions by Adrian Steinmann (he maintains his own fork
+called [efgallery](https://github.com/0-ast-0/efgallery)), and Petr
+Ruzicka (who maintains our Docker integration)
 
 ## License
 
