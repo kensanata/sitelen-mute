@@ -12,7 +12,7 @@ https://alexschroeder.ch/gallery
 
 - [Usage](#usage)
 - [Pre-built packages](#pre-built-packages)
-    - [Docker](#docker)
+- [Docker](#docker)
 - [Set the initial environment variables](#set-the-initial-environment-variables)
 - [Check the SOURCE_DIRECTORY with pictures](#check-the-sourcedirectory-with-pictures)
 - [Generate gallery with face detection enabled](#generate-gallery-with-face-detection-enabled)
