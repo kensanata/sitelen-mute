@@ -16,7 +16,6 @@ RUN set -x \
          jpegoptim \
          libcpanel-json-xs-perl \
          libimage-exiftool-perl \
-         libjasper-dev \
          libjpeg-dev \
          liblcms2-utils \
          libpng-dev \
