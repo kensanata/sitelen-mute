@@ -389,7 +389,7 @@ the author said that their mind is
 right now. *Sitelen Mute* is being developed by Alex
 Schroeder with contributions by Adrian Steinmann (he maintains his own fork
 called [efgallery](https://github.com/0-ast-0/efgallery)), and Petr
-Ruzicka (who maintains our Docker integration)
+Ruzicka (who maintains our Docker integration).
 
 ## License
 
