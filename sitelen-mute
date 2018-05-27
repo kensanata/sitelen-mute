@@ -265,9 +265,10 @@ sub run_in_parallel
       my ($i) = @_;
       my $r = &$fun($seq->[$i]);
       $res[$i] = defined($r) ? freeze($r) : undef;
-    },
-    0 .. $n-1
-  );
+    }, 0 .. $n-1);
+  for (@res) {
+    die "Aborting because one of the threads has died.\n" unless defined;
+  }
   return [ map { thaw $_ } @res ];
 }
 
