@@ -471,7 +471,7 @@ sub print_help
 my ($rc, @ARGS) = GetOptions(
   'help|h' => sub { print_help(0); },
   'version' => sub { print "$0 $VERSION\n"; exit 0; },
-  'c=s' => sub { @captions = @{ parse_captions($_[0], $_[1]) }; },
+  'c=s' => sub { @captions = @{ parse_captions($_[0], $_[1]) || [] }; },
   'd' => sub { $nodown = 1; },
   'f' => sub { $facedet = 1; },
   'i' => sub { $include = 1; },
