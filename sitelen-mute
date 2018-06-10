@@ -255,9 +255,9 @@ sub dispatch
 
 sub run_in_parallel
 {
-  my ($fun, $seq) = @_;
-  die "USAGE: run_in_parallel FUNCTION ARRAY"
-    unless @_ == 2 && ref $fun eq 'CODE'
+  my ($fn, $fun, $seq) = @_;
+  die "USAGE: run_in_parallel NAME FUNCTION AREF"
+    unless @_ == 3 && ref $fun eq 'CODE'
                    && ref $seq eq 'ARRAY'
                    && @$seq > 0;
   my $n = @$seq;
@@ -267,11 +267,13 @@ sub run_in_parallel
       my ($i) = @_;
       my $r = &$fun($seq->[$i]);
       $res[$i] = defined($r) ? freeze($r) : undef;
-    }, 0 .. $n-1);
-  for (@res) {
-    die "Aborting because one of the threads has died.\n" unless defined;
-  }
-  return [ map { thaw $_ } @res ];
+    },
+    0 .. $n-1
+  );
+  return [ map {
+    defined $_ ? thaw $_
+               : fatal "Thread failed in function '$fn'; cannot proceed"
+  } @res ];
 }
 
 sub min
@@ -711,7 +713,7 @@ if (@files) {
   warn map { "  $_\n" } @files
     if @files && $verbose > 1;
   progress::init('Image file inspection', scalar @files);
-  $aprops = run_in_parallel(\&analyze_file, \@files);
+  $aprops = run_in_parallel('analyze', \&analyze_file, \@files);
   warn Data::Dumper->Dump([$aprops], ['$aprops']), "\n"
     if $verbose > 2;
   # remove any files that failed analysis
@@ -919,7 +921,7 @@ if (@$aprops) {
     if $verbose > 1;
   my $msg = sprintf "Processing of %d image files", scalar @$aprops;
   progress::init($msg, scalar(@$aprops));
-  $adata = run_in_parallel(\&process_img, $aprops);
+  $adata = run_in_parallel('process', \&process_img, $aprops);
   progress::done();
   warn Data::Dumper->Dump([$adata], ['$adata']), "\n"
     if $verbose > 2;
