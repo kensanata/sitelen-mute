@@ -396,7 +396,7 @@ sub parse_int
 sub parse_captions
 {
   my ($o, $v) = @_;
-  return () if $v eq 'none';
+  return [] if $v eq 'none';
   my @cm = split(m{\s,\s}o, $v);
   for my $m (@cm) {
     fatal "'$m' not a caption method; use one of "
