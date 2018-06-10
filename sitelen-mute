@@ -155,6 +155,8 @@ sub do_copy
       @cmd = ('ln');
     } elsif ($t eq 'sym') {
       @cmd = ('ln', '-s');
+    } elsif ($t eq 'copy') {
+      @cmd = ('cp');
     } else {
       fatal "do_copy: cp option '$t' not supported";
     }
