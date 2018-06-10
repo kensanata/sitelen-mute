@@ -101,7 +101,7 @@ my %copy_method = (
   sym  => '--symbolic-link',
 );
 $copy_method{ref} = '--reflink' unless $^O =~ m{bsd$}oi;
-my $copy_method = 'sym';
+my $copy_method = 'copy';
 my $fdownload = catfile(qw{files album.zip});
 my $alg = 'sha256';
 my $sha = Digest::SHA->new($alg);
