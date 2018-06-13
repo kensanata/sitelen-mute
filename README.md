@@ -14,8 +14,6 @@ https://alexschroeder.ch/gallery
 - [Usage](#usage)
 - [Pre-built packages](#pre-built-packages)
 - [Docker](#docker)
-- [Set the initial environment variables](#set-the-initial-environment-variables)
-- [Check the SOURCE_DIRECTORY with pictures](#check-the-sourcedirectory-with-pictures)
 - [Usage notes](#usage-notes)
 - [Tuning thumbnail generation](#tuning-thumbnail-generation)
 - [Portraits and face detection](#portraits-and-face-detection)
@@ -27,6 +25,7 @@ https://alexschroeder.ch/gallery
 - [Authors](#authors)
 - [License](#license)
 - [Extending Sitelen Mute](#extending-sitelen-mute)
+- [Issues](#issues)
 - [Todo](#todo)
 
 <!-- markdown-toc end -->
@@ -419,6 +418,11 @@ use the viewer. This was Yuri D'Elia's aim when they started to develop
 *fgallery*, as it's much easier to just modify an existing CMS instead
 of trying to reinvent the wheel. All a backend has to do is provide a
 valid "data.json" at some prefixed address.
+
+## Issues
+
+Issues are being tracked
+[https://alexschroeder.ch/software/Sitelen_Mute on the wiki].
 
 ## Todo
 
