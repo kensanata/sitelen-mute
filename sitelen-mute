@@ -637,7 +637,7 @@ if ($workers) {
 sub analyze_file
 {
   my ($file) = @_;
-  my ($base, $absDir, $suffix) = fileparse(decode($file), qr/\.[^.]*$/);
+  my ($base, $absDir, $suffix) = fileparse($file, qr/\.[^.]*$/);
   $suffix = lc(substr($suffix, 1));
 
   progress::status("$base.$suffix");
