@@ -133,7 +133,7 @@ sub cmd_exists
 sub sys
 {
   my @cmd = @_;
-  my $cmd = join ' ', @cmd;
+  my $cmd = join ' ', map { qq{"$_"} } @cmd;
   warn "+ $cmd\n" if $verbose > 1;
   my $fd;
   open($fd, '-|', @cmd) || fatal "cannot execute $cmd: $!";
