@@ -422,7 +422,7 @@ valid "data.json" at some prefixed address.
 ## Issues
 
 Issues are being tracked
-[https://alexschroeder.ch/software/Sitelen_Mute on the wiki].
+[on the wiki](https://alexschroeder.ch/software/Sitelen_Mute).
 
 ## Todo
 
