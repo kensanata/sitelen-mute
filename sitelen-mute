@@ -1037,8 +1037,11 @@ for (@{$adata->{data}}) {
 $html .= qq{\n\t</div>\n};
 $html .= qq{    </div>\n};
 $html .= qq{    };
+
+# read the template for the index.html file
 my $indexhtml = slurp(catfile($absOut, 'view', 'index.html'));
 $indexhtml =~ s@<noscript>.*?</noscript>@<noscript>$html</noscript>@s;
+
 # include the optional social media decoration
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
@@ -1060,7 +1063,7 @@ if ($galleryTitle && $galleryDescription && $galleryUrl) {
   $indexhtml =~ s@  </head>@$html  </head>@;
 }
 
-# and finally, write out the new index.html and noscript.html files
+# unlink any existing index and write out the new index.html file
 my $index = catfile($absOut, 'index.html');
 unlink($index);
 my $fd;
@@ -1071,18 +1074,6 @@ if (close $fd) {
   warn "Wrote new $index\n";
 } else {
   fatal "Failed to write new $index: $!\n";
-}
-my $noscript = catfile($absOut, 'noscript.html');
-open($fd, ">:encoding($ENCODING)", $noscript)
-  || fatal "cannot write $noscript: $!";
-for (split m{\n+}o, $indexhtml) {
-  next if m{^\s*</?(no)?script\s*}o;
-  print $fd $_, "\n";
-}
-if (close $fd) {
-  warn "Wrote new $noscript\n";
-} else {
-  fatal "Failed to write new $noscript: $!\n";
 }
 
 print sprintf "%s version %s %s gallery in %s\n",
