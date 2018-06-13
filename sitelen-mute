@@ -161,7 +161,7 @@ sub do_copy
       fatal "do_copy: cp option '$t' not supported";
     }
   } else {
-    push @cmd, $copy_method{$t};
+    push @cmd, $copy_method{$t} if $copy_method{$t}; # don't push ''
   }
   sys(@cmd, @args);
 };
