@@ -1042,13 +1042,13 @@ $indexhtml =~ s@<noscript>.*?</noscript>@<noscript>$html</noscript>@s;
 # include the optional social media decoration
 if ($galleryTitle && $galleryDescription && $galleryUrl) {
   # default to the first image
-  my $galleryImage = $adata->[0]->{props}->{root} . ".$ext";
+  my $galleryImage = $adata->{data}->[0]->{img}->[0];
   $html = qq{
     <!-- for Facebook -->
     <meta property="og:title" content="$galleryTitle" />
     <meta property="og:description" content="$galleryDescription" />
     <meta property="og:type" content="article" />
-    <meta property="og:image" content="${galleryUrl}imgs/$galleryImage" />
+    <meta property="og:image" content="${galleryUrl}$galleryImage" />
     <meta property="og:url" content="$galleryUrl" />
     <!-- for Twitter -->
     <meta name="twitter:card" content="summary" />
