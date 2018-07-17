@@ -338,26 +338,30 @@ Therefore it's also helpful to install:
 On Debian or Ubuntu, you can install all the required dependencies with:
 
 ```
-sudo apt-get install imagemagick exiftran zip liblcms2-utils
-sudo apt-get install libimage-exiftool-perl libcpanel-json-xs-perl
+sudo apt install imagemagick exiftran zip liblcms2-utils \
+                 libimage-exiftool-perl libcpanel-json-xs-perl
 ```
 
 To save more space in the generated galleries, we recommend installing also the
 optional dependencies:
 
 ```
-sudo apt-get install jpegoptim pngcrush p7zip
+sudo apt install jpegoptim pngcrush p7zip
 ```
 
 `fcaption` is written in Python and requires PyQT4. You can install
 the required packages with::
 
 ```
-sudo apt-get install python-qt4
+sudo apt install python-qt4
 ```
 
 For face detection support, simply follow the
-[facedetect installation instructions](https://www.thregr.org/~wavexx/software/facedetect/#dependencies).
+[facedetect installation instructions](https://www.thregr.org/~wavexx/software/facedetect/#dependencies). The gist of it:
+
+```
+sudo apt install python3 python3-opencv opencv-data
+```
 
 On a Mac, we recommend installing the dependencies using [MacPorts](https://www.macports.org/) or [Homebrew](https://brew.sh/).
 
