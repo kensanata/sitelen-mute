@@ -40,7 +40,7 @@ use Thread::Queue;
 use Storable qw{freeze thaw};
 use Fcntl;
 
-use FindBin qw{$Bin};
+use FindBin qw{$RealBin};
 use File::Basename qw{fileparse};
 use File::Find qw{find};
 use File::Path qw{make_path remove_tree};
@@ -58,7 +58,7 @@ $Data::Dumper::Indent = 1;
 # our name ;-)
 my $me = (splitpath($0))[2];
 # view subdirectory where the JavaScript and CSS code lives
-my $viewdir = catfile($Bin, 'view');
+my $viewdir = catfile($RealBin, 'view');
 umask oct('0022');
 
 # defaults
