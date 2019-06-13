@@ -75,7 +75,7 @@ python -m SimpleHTTPServer 8000
 This serves all the files from `http://localhost:8000`.
 
 For a real world example including face detection and meta data for
-social media, and using Perl Brew because this system's Perl doesn't
+social media, and using Perlbrew because this system's Perl doesn't
 have thread support:
 
 ```
@@ -85,6 +85,41 @@ perlbrew exec --with perl-5.22.0-thread-multi ~/src/sitelen-mute/fgallery -f --t
 /Volumes/Data/Pictures/Fotos\ 2018/Japan/Album/ \
 /Volumes/Data/Pictures/Fotos\ 2018/2018-japan
 ```
+
+## Perl with Threads
+
+If you're wondering about the use of Perlbrew, you're not alone. If
+you cannot run *Sitelen Mute* because you're getting the error "This
+Perl not built to support threads" then you'll need to get a Perl with
+thread support. I find [Perlbrew](https://perlbrew.pl/) to be the
+simplest solution. I installed it using my package manager, in this
+case: `sudo apt install perlbrew`. Your mileage may vary.
+
+Then I checked the available Perl versions using `perlbrew available`
+and picked the first one with an *even* minor version. In the example
+above that was 5.22.0, but as I write this right now it would be
+5.30.0.
+
+Build and install it using `perlbrew install --thread perl-5.30.0` (or
+whatever version you picked). This takes a long time.
+
+Use `perlbrew use perl-5.30.0` to switch your Perl for the current
+shell; use `perlbrew switch perl-5.30.0` to switch your default Perl.
+
+The problem is that you need to reinstall all your modules for this
+version! If you used Perlbrew in the past, you might have used
+`perlbrew clone-modules` to reinstall them. If you haven't used
+Perlbrew before, I recommend installing App::cpanminus before doing
+anything else and then using `cpanm` to install the rest. See
+[Dependencies](#dependencies) for more.
+
+```
+perlbrew use perl-5.30.0
+cpan install App::cpanminus
+cpanm Image::ExifTool Cpanel::JSON::XS
+```
+
+Now you should have a Perl that works!
 
 ## Pre-built packages
 
