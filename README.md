@@ -215,22 +215,22 @@ cut edges (this effect can be seen in the demo gallery).
 ## Portraits and face detection
 
 To simply favor photos shot in portrait format, invert the
-width/height of the thumbnail sizes::
+width/height of the thumbnail sizes:
 
 ```
 ./sitelen-mute --min-thumb 112x150 --max-thumb 200x267 ...
 ```
 
-This will force the thumbnails to always fit vertically, at the
-expense of a higher horizontal thumbnail strip.
+This forces the thumbnails to always fit vertically, at the expense of
+a higher horizontal thumbnail strip.
 
 If your photos are mixed and can contain people, faces or portraits, you can
 enable face detection by using the `-f` flag and installing 
 [facedetect](https://www.thregr.org/~wavexx/software/facedetect/).
 
-Face detection will ensure that the thumbnails, especially when cut,
-will be centered on the face of the subject. If face detection is
-enabled, there's generally no need to increase the thumbnail size.
+Face detection ensures that the thumbnails, especially when cut, will
+be centred on the face of the subject. If face detection is enabled,
+there's generally no need to increase the thumbnail size.
 
 ## Image captioning
 
@@ -385,7 +385,7 @@ sudo apt install jpegoptim pngcrush p7zip
 ```
 
 `fcaption` is written in Python and requires PyQT4. You can install
-the required packages with::
+the required packages with:
 
 ```
 sudo apt install python-qt4
@@ -398,14 +398,38 @@ For face detection support, simply follow the
 sudo apt install python3 python3-opencv opencv-data
 ```
 
-On a Mac, we recommend installing the dependencies using [MacPorts](https://www.macports.org/) or [Homebrew](https://brew.sh/).
+On a Mac, we recommend installing the dependencies using
+[MacPorts](https://www.macports.org/).
 
-After installing MacPorts, type::
+After installing MacPorts, type:
 
 ```
 sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
 sudo port install p5-image-exiftool p5-cpanel-json-xs
 ```
+
+If you use [Homebrew](https://brew.sh/) on a Mac...
+
+```
+# install perlbrew
+sudo cpan App::perlbrew
+perlbrew init
+# build a perl with threading
+perlbrew install --thread stable
+perlbrew list
+# pick the perl you just built
+perlbrew switch XXX
+# install cpanm for perlbrew
+curl -L https://cpanmin.us | perl - App::cpanminus
+cpanm Image::ExifTool
+cpanm Cpanel::JSON::XS
+brew install imagemagick lcms2 jpeg jpegoptim pngcrush
+# for facedetect
+pip3 install opencv-python
+brew install opencv@3
+```
+
+Test `facedetect` on some image.
 
 ## Installation
 
