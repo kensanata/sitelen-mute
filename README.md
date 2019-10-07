@@ -384,8 +384,14 @@ optional dependencies:
 sudo apt install jpegoptim pngcrush p7zip
 ```
 
-`fcaption` is written in Python and requires PyQT4. You can install
-the required packages with:
+`fcaption` is written in Python and requires either PyQT4 or PySide2 (Qt5). You
+can install PySide2 with:
+
+```
+sudo apt install python-pyside2
+```
+
+Or PyQt4 with:
 
 ```
 sudo apt install python-qt4
