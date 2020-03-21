@@ -381,7 +381,7 @@ To save more space in the generated galleries, we recommend installing also the
 optional dependencies:
 
 ```
-sudo apt install jpegoptim pngcrush p7zip
+sudo apt install jpegoptim pngcrush facedetect p7zip
 ```
 
 `fcaption` is written in Python and requires either PyQT4 or PySide2 (Qt5). You
@@ -397,20 +397,13 @@ Or PyQt4 with:
 sudo apt install python-qt4
 ```
 
-For face detection support, simply follow the
-[facedetect installation instructions](https://www.thregr.org/~wavexx/software/facedetect/#dependencies). The gist of it:
-
-```
-sudo apt install python3 python3-opencv opencv-data
-```
-
 On a Mac, we recommend installing the dependencies using
 [MacPorts](https://www.macports.org/).
 
 After installing MacPorts, type:
 
 ```
-sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush
+sudo port install imagemagick lcms2 jpeg jpegoptim pngcrush facedetect
 sudo port install p5-image-exiftool p5-cpanel-json-xs
 ```
 
@@ -429,10 +422,7 @@ perlbrew switch XXX
 curl -L https://cpanmin.us | perl - App::cpanminus
 cpanm Image::ExifTool
 cpanm Cpanel::JSON::XS
-brew install imagemagick lcms2 jpeg jpegoptim pngcrush
-# for facedetect
-pip3 install opencv-python
-brew install opencv@3
+brew install imagemagick lcms2 jpeg jpegoptim pngcrush facedetect
 ```
 
 Test `facedetect` on some image.
@@ -487,6 +477,62 @@ use the viewer. This was Yuri D'Elia's aim when they started to develop
 *fgallery*, as it's much easier to just modify an existing CMS instead
 of trying to reinvent the wheel. All a backend has to do is provide a
 valid "data.json" at some prefixed address.
+
+## Troubleshooting
+
+This section talks about strange and weird problems and how to work
+around them.
+
+### convert: width or height exceeds limit
+
+```text
+Image file inspection 100% completed - will now process 79 image files
+convert-im6.q16: width or height exceeds limit `/home/alex/Pictures/Galapagos/2018-quito/files/IMG_1040.jpg' @ error/cache.c/OpenPixelCache/3912.
+convert-im6.q16: no images defined `tiff:/home/alex/Pictures/Galapagos/2018-quito/files/IMG_1040.jpg.tmp' @ error/convert.c/ConvertImageCommand/3258.
+Thread 2 terminated abnormally: Fatal error:
+close failed on "convert" "-quiet" "/home/alex/Pictures/Galapagos/2018-quito/files/IMG_1040.jpg" "-compress" "LZW" "-type" "truecolor" "tiff:/home/alex/Pictures/Galapagos/2018-quito/files/IMG_1040.jpg.tmp": 
+Fatal error:
+Thread failed in function 'process'; cannot proceed
+```
+
+The problem is that ImageMagick has a security policy that prevents
+"image bombs" – images that are so large that they could bomb your
+server if you are using ImageMagick to process images uploaded from
+the Internet, for example.
+
+You can show the limits using `identify -list resource`:
+
+```text
+Resource limits:
+  Width: 16KP
+  Height: 16KP
+  List length: 18.446744EP
+  Area: 128MP
+  Memory: 256MiB
+  Map: 512MiB
+  Disk: 1GiB
+  File: 768
+  Thread: 4
+  Throttle: 0
+  Time: unlimited
+```
+
+Compare this to the image using `identify Quito/IMG_1040.JPG`:
+
+```text
+Quito/IMG_1040.JPG JPEG 16382x3628 16382x3628+0+0 8-bit sRGB 25.6993MiB 0.000u 0:00.000
+```
+
+As root, you need to change the security policy of your installation
+if you want to process such large panorama shots. Edit
+`/etc/ImageMagick-6/policy.xml` and make the following change:
+
+```text
+62c62
+<   <policy domain="resource" name="width" value="16KP"/>
+---
+>   <policy domain="resource" name="width" value="32KP"/>
+```
 
 ## Issues
 
