@@ -63,31 +63,16 @@ Generate all the static files with `./sitelen-mute`:
 
 Upload `my-gallery` somewhere.
 
-To test or preview the gallery locally using Firefox, you can just
-open the file `my-gallery/index.html`. On other browsers you need a
-web server (due to
-[same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy)).
-If you have Python installed, a quick way to test the gallery locally
-is to run the following:
-
-```
-cd my-gallery
-python -m SimpleHTTPServer 8000
-```
-
-This serves all the files from `http://localhost:8000`.
-
 For a real world example including face detection and meta data for
-social media, and using Perlbrew because this system's Perl doesn't
-have thread support (see the troubleshooting section if you want to
-know more):
+social media, with the images stored in the `Quito` directory and the
+gallery ending up in `2020-quito`:
 
 ```
-perlbrew exec --with perl-5.22.0-thread-multi ~/src/sitelen-mute/fgallery -f --title "Japan 2018" \
---description "Alex, Zeno und seine Kinder, und Chris mit Frau und Kindern machen Ferien in Japan." \
---url https://alexschroeder.ch/gallery/2018-japan/ \
-/Volumes/Data/Pictures/Fotos\ 2018/Japan/Album/ \
-/Volumes/Data/Pictures/Fotos\ 2018/2018-japan
+sitelen-mute -f --title "Quito 2020" \
+  --description "On our way to the Galápagos we stopped for a few days in Quito, Ecuador." \
+  --url https://alexschroeder.ch/gallery/2020-quito/ \
+  Quito \
+  2020-quito
 ```
 
 ## Pre-built packages
@@ -451,6 +436,23 @@ valid "data.json" at some prefixed address.
 
 This section talks about strange and weird problems and how to work
 around them.
+
+### cannot load gallery data
+
+To test or preview the gallery locally, you might think that you can
+just open the `index.html` file of the gallery. Sadly, this is no
+longer the case for security reasons (see [same-origin
+policy](https://en.wikipedia.org/wiki/Same-origin_policy) if you want
+to know more).
+
+If you have Python installed, a quick way to test the gallery locally
+is to run the following inside the gallery:
+
+```
+python -m SimpleHTTPServer 8000
+```
+
+This serves all the files from `http://localhost:8000`.
 
 ### not built to support threads
 
