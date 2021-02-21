@@ -222,7 +222,19 @@ sub write_json
   for (qw(thumb blur)) {
     $j->{$_} = $jh->{$_} if exists $jh->{$_};
   }
-  $j->{data} = [ sort { $a->{stamp} <=> $b->{stamp} } @{$jh->{data}}, @$ja ];
+  if ($timesort) {
+  # Sorting: time
+        $j->{data} = $revsort ? [ sort { $b->{stamp} <=> $a->{stamp} } @{$jh->{data}}, @$ja ]
+                              :
+                                [ sort { $a->{stamp} <=> $b->{stamp} } @{$jh->{data}}, @$ja ];
+  }
+  else {
+  # Sorting: image names
+       $j->{data} = $revsort ? [ sort { ${$b->{img}}[0] cmp  ${$a->{img}}[0] } @{$jh->{data}}, @$ja ]
+                             :
+                               [ sort { ${$a->{img}}[0] cmp  ${$b->{img}}[0] } @{$jh->{data}}, @$ja ];
+  }
+
   $j->{version} = $VERSION;
   $j->{timestamp} = time();
   $j->{timecreated} = sprintf "%s", scalar localtime $j->{timestamp};
@@ -925,12 +937,6 @@ if (@$aprops) {
   progress::done();
   warn Data::Dumper->Dump([$adata], ['$adata']), "\n"
     if $verbose > 2;
-}
-
-# sorting
-if ($timesort) {
-  $adata = [ sort { $a->{props}{stamp} <=> $b->{props}{stamp} } @$adata ];
-  $adata = [ reverse @$adata ] if $revsort;
 }
 
 # create or update the album zip file
