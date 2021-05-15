@@ -1,0 +1,25 @@
+# this file
+^MANIFEST\.SKIP
+
+# files for developers
+^TODO
+^RELEASE
+
+# generated files
+^pm_to_blib
+^MYMETA
+^Makefile$
+
+# hidden files, backup files
+^\.
+~$
+\.bak$
+\.old$
+
+# archives
+\.tar\.gz$
+
+# directories
+^t/gallery/
+^blib/
+^\.git/

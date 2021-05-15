@@ -1,0 +1,15 @@
+App-sitelenmute*
+blib
+test
+target
+*.tar
+*.old
+*.bak
+*.json
+*.tar.gz
+pm_to_blib
+Makefile
+MANIFEST
+MYMETA.yml
+/t/gallery/
+/t/album2/
