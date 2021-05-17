@@ -568,7 +568,6 @@ sub analyze_file {
       fatal "Encountered unknown caption method '$m'";
     }
   }
-
   return $props;
 }
 
@@ -629,6 +628,7 @@ sub process_image {
   my $file = $props{file};
 
   # derived file names
+  my $ofile = (splitpath($file))[2];
   my $ffile = catfile('files', "$root.$suffix");
   my $fbase = "$root.$ext";
   my $fimg = catfile('imgs', $fbase);
@@ -739,7 +739,7 @@ sub process_image {
   $fdata{img} = [$fimg, [map { int } @simg]];
   $fdata{file} = [$ffile, [map { int } @sfile]];
   $fdata{blur} = $fblur if $do_blur;
-  $fdata{original} = $file;
+  $fdata{original} = $ofile;
   $fdata{$alg} = $digest;
 
   # avoid storing duplicate information

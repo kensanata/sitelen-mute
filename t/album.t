@@ -38,7 +38,7 @@ my $html = catfile($gallery, "index.html");
 # generate album
 my $perl = $^X;
 my $script = catfile("blib", "script", "sitelen-mute");
-my $output = qx("$perl" "$script" -v -v "$album" "$gallery");
+my $output = qx("$perl" "$script" -c txt -v -v "$album" "$gallery");
 unlike($output, qr(error)i, "Running script");
 like($output, qr(Processing 3 image files), "Proccessing files");
 ok(-d $gallery, "Gallery was created");
@@ -49,6 +49,14 @@ ok(-e catfile($gallery, "imgs", "P3111203.jpg"), "Second image there");
 # data
 my $data = decode_json(read_text($json));
 is($data->{data}->[0]->{caption}->[0], "The white stuff is salt", "Caption title from text file");
+is($data->{data}->[0]->{img}->[0], "imgs/P3111190.jpg", "Filename of the first image in the JSON");
+is($data->{data}->[0]->{date}, "2020-03-11 16:47", "Date of the first image in the JSON");
+is($data->{data}->[1]->{caption}->[0], "Grapsus grapsus atop a marine iguana", "Caption title from text file");
+is($data->{data}->[1]->{img}->[0], "imgs/P3111203.jpg", "Filename of the second image in the JSON");
+is($data->{data}->[1]->{date}, "2020-03-11 16:54", "Date of the first image in the JSON");
+is($data->{data}->[2]->{caption}, undef, "Caption title from text file");
+is($data->{data}->[2]->{img}->[0], "imgs/head.jpg", "Filename of the third image in the JSON");
+is($data->{data}->[2]->{date}, undef, "Date of the third image in the JSON");
 
 my $dom = Mojo::DOM58->new(read_text($html));
 is($dom->at("#wrapper a#0")->attr("href"), "imgs/P3111190.jpg", "First image href");
