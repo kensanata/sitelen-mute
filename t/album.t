@@ -25,7 +25,11 @@ use File::Spec::Functions qw(catfile);
 use JSON::Tiny qw(decode_json);
 use Mojo::DOM58;
 
-plan skip_all => "'convert' not installed" unless searchpath('convert');
+plan skip_all => "'convert' not installed"
+    unless searchpath('convert');
+
+my $orient = ""; # means auto-orient
+$orient = "-o" unless searchpath('exiftran') or searchpath('exifautotran');
 
 # where the images are
 my $album = catfile("t", "album");
@@ -38,7 +42,7 @@ my $html = catfile($gallery, "index.html");
 # generate album
 my $perl = $^X;
 my $script = catfile("blib", "script", "sitelen-mute");
-my $output = qx("$perl" "$script" -c txt -v -v "$album" "$gallery");
+my $output = qx("$perl" "$script" -c txt $orient -v -v "$album" "$gallery");
 unlike($output, qr(error)i, "Running script");
 like($output, qr(Processing 3 image files), "Proccessing files");
 ok(-d $gallery, "Gallery was created");
@@ -73,7 +77,7 @@ is($dom->at("#wrapper a#2 img")->attr("alt"), "head.jpg", "Third image alt text"
 my $album2 = catfile("t", "album2");
 remove_tree($album2) if -d $album2;
 dircopy $album, $album2;
-$output = qx("$perl" "$script" -v -v "$album2" "$gallery");
+$output = qx("$perl" "$script" $orient -v -v "$album2" "$gallery");
 unlike($output, qr(error)i, "Running script again");
 like($output, qr(None of the 3 found image files are new), "No new files");
 like($output, qr(None of the images in the gallery were deleted), "No deleted files");
@@ -85,7 +89,7 @@ is($data->{data}->[0]->{caption}->[0], "The white stuff is salt",
 
 # removing a picture and updating
 unlink(catfile($album2, "P3111190.JPG"));
-$output = qx("$perl" "$script" -v -v "$album2" "$gallery");
+$output = qx("$perl" "$script" $orient -v -v "$album2" "$gallery");
 unlike($output, qr(error)i, "Running script again");
 like($output, qr(1 image in the gallery was deleted), "First image removed");
 like($output, qr(Removed 1 image files from .*album.zip), "First image removed from zipfile");
