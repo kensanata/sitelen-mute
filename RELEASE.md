@@ -10,8 +10,10 @@ Use n.nn_nn for developer releases:
 
 ```
 make distdir
-mv App-sitelenmute-3 App-sitelenmute-3.00_00
-tar czf App-sitelenmute-3.00_00.tar.gz App-sitelenmute-3.00_00
+rel=3.00_02
+mv App-sitelenmute-3 App-sitelenmute-$rel
+tar czf App-sitelenmute-$rel.tar.gz App-sitelenmute-$rel
+cpan-upload -u SCHROEDER App-sitelenmute-$rel.tar.gz
 ```
 
 Double check the `MANIFEST`. Did we add new files that should be in
@@ -24,6 +26,7 @@ CPAN](https://www.perl.com/article/how-to-upload-a-script-to-cpan/) by
 David Farrell (2016):
 
 ```
+trash App-sitelenmute-*.*_??
 perl Makefile.PL && make && make dist
 cpan-upload -u SCHROEDER App-sitelenmute-3.tar.gz
 ```
