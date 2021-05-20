@@ -22,7 +22,7 @@ use utf8;
 our $VERSION = "3.0.0";
 
 use Digest::SHA;
-use Encode qw(decode_utf8 encode_utf8);
+use Encode qw(decode decode_utf8 encode_utf8);
 use Encode::Locale;
 use File::Basename qw(fileparse);
 use File::Copy::Recursive qw(dircopy);
@@ -385,7 +385,7 @@ say (($jpegoptim ? "Found" : "No") . " jpegoptim") if $verbose > 1;
 $pngoptim = 0 unless cmd_exists('pngcrush');
 say (($pngoptim ? "Found" : "No") . " pngcrush") if $verbose > 1;
 
-fatal "Missing facedetect (see $facedetect_url)"
+fatal "Missing facedetect (see $facedetect_url), cannot use -f"
   if $facedet && !cmd_exists('facedetect');
 say "Found facedetect" if $facedet && $verbose > 1;
 
@@ -395,14 +395,12 @@ say "Found tificc" if $sRGB && $verbose > 1;
 my $tificccmd = 'tificc';
 
 my $exiftrancmd;
-while($orient) {
-  $exiftrancmd = "exiftran -aip" if cmd_exists('exiftran');
-  last if $exiftrancmd;
-  $exiftrancmd = "exifautotran" if cmd_exists('exifautotran');
-  fatal 'Missing exiftran or exifautotran executable for JPEG autorotation'
-    unless $exiftrancmd;
+if ($orient) {
+  if (cmd_exists('exiftran')) { $exiftrancmd = "exiftran -aip" }
+  elsif (cmd_exists('exifautotran')) { $exiftrancmd = "exifautotran" }
+  else { fatal 'Missing exiftran or exifautotran executable for JPEG autorotation, use -o to skip' }
+  say "Found $exiftrancmd" if $verbose > 1;
 }
-say "Found $exiftrancmd" if $verbose > 1;
 
 # get a list of files to work on
 my @files;
