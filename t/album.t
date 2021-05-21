@@ -32,7 +32,7 @@ my $options = " -v -v";
 # -o means without auto-orient
 $options .= " -o" unless searchpath('exiftran') or searchpath('exifautotran');
 # -no-sRGB means without intermediate sRGB colorspace conversion
-$options .= " -no-sRGB" unless searchpath('exiftran') or searchpath('exifautotran');
+$options .= " -no-sRGB" unless searchpath('tificc');
 
 # where the images are
 my $album = catfile("t", "album");
