@@ -58,7 +58,7 @@ sub postamble {
   my $self = shift;
   my @ret = File::ShareDir::Install::postamble($self);
   push @ret, <<'EOT';
-README.md: script/jupiter
+README.md: script/sitelen-mute
 	pod2markdown $< $@
 EOT
   return join "\n", @ret;
