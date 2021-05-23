@@ -33,6 +33,8 @@ my $options = " -v -v";
 $options .= " -o" unless searchpath('exiftran') or searchpath('exifautotran');
 # -no-sRGB means without intermediate sRGB colorspace conversion
 $options .= " -no-sRGB" unless searchpath('tificc');
+# -d means without zip
+$options .= " -d" unless searchpath('zip') or searchpath('7za');
 
 # where the images are
 my $album = catfile("t", "album");
