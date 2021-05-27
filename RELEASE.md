@@ -10,8 +10,8 @@ Use n.nn_nn for developer releases:
 
 ```
 make distdir
-rel=3.00_02
-mv App-sitelenmute-3 App-sitelenmute-$rel
+rel=3.01_04
+mv App-sitelenmute-${rel%_*} App-sitelenmute-$rel
 tar czf App-sitelenmute-$rel.tar.gz App-sitelenmute-$rel
 cpan-upload -u SCHROEDER App-sitelenmute-$rel.tar.gz
 ```
@@ -28,7 +28,7 @@ David Farrell (2016):
 ```
 trash App-sitelenmute-*.*_??
 perl Makefile.PL && make && make dist
-cpan-upload -u SCHROEDER App-sitelenmute-3.tar.gz
+cpan-upload -u SCHROEDER App-sitelenmute-3.02.tar.gz
 ```
 
 How to Prepare a New Release
