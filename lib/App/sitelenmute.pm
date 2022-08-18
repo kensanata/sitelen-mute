@@ -1,6 +1,6 @@
 package App::sitelenmute;
 
-our $VERSION = 3.02;
+our $VERSION = 3.03;
 
 =head1 NAME
 
