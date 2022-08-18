@@ -471,13 +471,13 @@ function setupHeader()
   var el;
   if(imgs.index)
   {
-    el = new Element('a', { 'title': 'Back to index', 'href': imgs.index });
+    el = new Element('a', { 'title': 'Back to index', 'href': encodeURI(imgs.index) });
     el.set('html', '<img src="view/back.png"/>');
     ehdr.adopt(el);
   }
   if(imgs.data[eidx].file)
   {
-    var file = imgs.data[eidx].file[0];
+    var file = encodeURI(imgs.data[eidx].file[0]);
     el = new Element('a', { 'title': 'Download image', 'href': file });
     el.set('html', '<img src="view/eye.png"/>');
     ehdr.adopt(el);
@@ -516,7 +516,7 @@ function onMainReady()
   setupHeader();
   if(imgs.data[eidx].file)
   {
-    var file = imgs.data[eidx].file[0];
+    var file = encodeURI(imgs.data[eidx].file[0]);
     eimg.addEvent('click', function() { window.location = file; });
     eimg.setStyle('cursor', 'pointer'); // fallback
     eimg.setStyle('cursor', 'zoom-in');
@@ -588,7 +588,7 @@ function onMainReady()
   eback.src = '';
   if (imgs.data[eidx].blur)
   {
-    eback.src = imgs.data[eidx].blur;
+    eback.src = encodeURI(imgs.data[eidx].blur);
     enoise.setStyle('background-position', rp + 'px ' + rp + 'px');
   }
 
@@ -601,7 +601,7 @@ function onMainReady()
   if(prefetch && sdir != 0)
   {
     var data = imgs.data[umod(eidx + sdir, imgs.data.length)];
-    Asset.images([data.img[0], data.blur? data.blur :[]]);
+    Asset.images([encodeURI(data.img[0]), data.blur? data.blur :[]]);
   }
 }
 
@@ -703,7 +703,7 @@ function change()
 function loadThumb(i)
 {
   var x = imgs.data[i];
-  x.eimg.setStyle('background-image', 'url(' + encodeURI(x.thumb[0]) + ')');
+  x.eimg.setStyle('background-image', 'url("' + x.thumb[0] + '")');
   x.thumbLoaded = true;
 }
 
