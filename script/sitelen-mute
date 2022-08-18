@@ -843,16 +843,15 @@ sub analyze_file {
   return unless defined $props && exists $props->{FileType}
                                && exists $filetypes{$props->{FileType}};
 
-  # sanitize file name
-  my $sane = $base;
-  $sane =~ s/[^\w\-]/_/gu;
-  my $root = $sane;
-
-  # create a new file, try with names_#.jpg until we find the first one free
+  # Create a new file, try with names_#.jpg until we find the first one free; do
+  # not "sanitize" the name otherwise without properly decoding and encoding it
+  # again; otherwise you'll turn UTF-8 encoded filenames into garbage, for
+  # example.
+  my $root = $base;
   for (my $c = 0;; $c++) {
     my $tmp = catfile(catfile($absOut, 'imgs'), "$root.$ext");
     last unless -e $tmp;
-    $root = sprintf "%s_%d", $sane, $c;
+    $root = sprintf "%s_%d", $base, $c;
   }
 
   $props->{file} = $file;
