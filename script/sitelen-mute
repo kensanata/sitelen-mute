@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # A modern, minimalist javascript photo gallery
-# Copyright© 2016-2021  Alex Schroeder <alex@gnu.org>
+# Copyright© 2016-2022  Alex Schroeder <alex@gnu.org>
 # Copyright©      2018  Adrian Steinmann <ast@marabu.ch>
 # Copyright© 2011-2016  wave++ "Yuri D'Elia" <wavexx@thregr.org>
 
@@ -347,6 +347,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 =cut
 
 use Modern::Perl '2018';
+use open ':std', ':encoding(utf8)';
 use utf8;
 
 our $VERSION = "3.0.0";
@@ -734,7 +735,7 @@ if ($orient) {
 
 # get a list of files to work on
 my @files;
-@files = map { catfile($absDir, $_) } sort grep m{\.($extensions)$}i, read_dir($absDir);
+@files = map { catfile($absDir, decode_utf8($_)) } sort grep m{\.($extensions)$}i, read_dir($absDir);
 fatal "No image files found in '$absDir'" unless @files;
 
 # derived arguments
