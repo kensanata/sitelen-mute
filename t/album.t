@@ -38,6 +38,16 @@ $options .= " -o" unless searchpath('exiftran') or searchpath('exifautotran');
 $options .= " --no-sRGB" unless searchpath('tificc');
 # -d means without zip
 $options .= " -d" unless searchpath('zip') or searchpath('7za');
+# -n "album name"
+$options .= " -n Test";
+# --index back button URL
+$options .= " --index=../top.html";
+# --title of preview
+$options .= " --title='Test Preview'";
+# --description long
+$options .= " --description='Test Description'";
+# --url of the gallery
+$options .= " --url=http://example.org/test";
 
 # where the images are
 my $album = catfile("t", "album");
@@ -74,6 +84,9 @@ is($data->{data}->[3]->{caption}, undef, "Caption title from text file");
 is($data->{data}->[3]->{img}->[0], "imgs/head.jpg", "Filename of the third image in the JSON");
 is($data->{data}->[3]->{date}, undef, "Date of the third image in the JSON");
 
+is($data->{index}, "../top.html", "--index");
+
+# index.html
 my $dom = Mojo::DOM58->new(read_text($html));
 is($dom->at("#wrapper a#0")->attr("href"), "imgs/Blaufußtölpel.jpg", "Blue-Footed Booby image href");
 is($dom->at("#wrapper a#1")->attr("href"), "imgs/P3111190.jpg", "Marine Iguana image href");
@@ -87,6 +100,12 @@ is($dom->at("#wrapper a#0 img")->attr("alt"), "Zwei Blaufußtölpel beim Balztan
 is($dom->at("#wrapper a#1 img")->attr("alt"), "The white stuff is salt", "Marine Iguana image alt text");
 is($dom->at("#wrapper a#2 img")->attr("alt"), "Grapsus grapsus atop a marine iguana", "Red Rock Crab image alt text");
 is($dom->at("#wrapper a#3 img")->attr("alt"), "head.jpg", "PNG Logo image alt text");
+
+is($dom->at('h1[itemprop="name"]')->text, "Test Preview", "--title (h1)");
+is($dom->at('p[itemprop="description"]')->text, "Test Description", "--description (p)");
+is($dom->at('meta[property="og:title"]')->attr("content"), "Test Preview", "--title (og)");
+is($dom->at('meta[property="og:description"]')->attr("content"), "Test Description", "--description (og)");
+is($dom->at('meta[property="og:url"]')->attr("content"), "http://example.org/test", "--url");
 
 # a copy of the album: no changes
 my $album2 = catfile("t", "album2");
