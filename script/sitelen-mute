@@ -649,7 +649,7 @@ GetOptions(
   'i' => sub { $include = 1; },
   'o' => sub { $orient = 0; },
   'k' => sub { $use_orig = 1; },
-  'n=s' => sub { $name = decode(locale => shift); },
+  'n=s' => sub { shift; $name = decode(locale => shift); },
   'p' => sub { $fullpano = 0; },
   'r' => sub { $revsort = 1; },
   's' => sub { $slim = 1; },
@@ -661,10 +661,10 @@ GetOptions(
   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
   'no-sRGB' => sub { $sRGB = 0; },
   'quality=i' => sub { $imgq = parse_int($_[0], $_[1], 0, 100); },
-  'index=s' => sub { $indexUrl = decode(locale => shift); },
-  'title=s' => sub { $galleryTitle = decode(locale => shift); },
-  'description=s' => sub { $galleryDescription = decode(locale => shift); },
-  'url=s' => sub { $galleryUrl = decode(locale => shift); },
+  'index=s' => sub { shift; $indexUrl = decode(locale => shift); },
+  'title=s' => sub { shift; $galleryTitle = decode(locale => shift); },
+  'description=s' => sub { shift; $galleryDescription = decode(locale => shift); },
+  'url=s' => sub { shift; $galleryUrl = decode(locale => shift); },
   'link-orig:s' => sub { $copy_method = parse_copy_method($_[0], $_[1]); },
   'viewdir:s' => \$viewdir,
 );
@@ -1132,7 +1132,7 @@ my %json = (
 $json{blur} = \@backsize if $do_blur;
 for my $fdata (@$adata) {
   my %data;
-  for (qw(img thumb blur center original), $alg) {
+  for (qw(img thumb blur center file original), $alg) {
     $data{$_} = $fdata->{$_} if defined $fdata->{$_};
   }
   for (qw(date stamp caption)) {
