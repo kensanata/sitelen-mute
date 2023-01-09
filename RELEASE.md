@@ -4,6 +4,9 @@ Run `make README.md`.
 
 Update `Changes` with user-visible changes.
 
+Double check the `MANIFEST`. Did we add new files that should be in
+here?
+
 Increase the version in `lib/App/sitelenmute.pm`.
 
 Use n.nn_nn for developer releases:
@@ -15,9 +18,6 @@ mv App-sitelenmute-${rel%_*} App-sitelenmute-$rel
 tar czf App-sitelenmute-$rel.tar.gz App-sitelenmute-$rel
 cpan-upload -u SCHROEDER App-sitelenmute-$rel.tar.gz
 ```
-
-Double check the `MANIFEST`. Did we add new files that should be in
-here?
 
 Commit any changes and tag the release.
 
